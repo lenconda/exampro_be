@@ -1,19 +1,22 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  Inject,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
-import { Repository } from 'typeorm';
-import { Role } from './role.entity';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
+    @Inject('UserService')
+    private readonly userService: UserService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const roleNames = this.reflector.get<string[]>(
       'roles',
       context.getHandler(),
