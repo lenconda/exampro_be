@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { getMetadataArgsStorage } from 'typeorm';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
-import { APP_GUARD } from '@nestjs/core';
 
 // @ts-ignore
 import apprc from '../.apprc';
@@ -12,10 +11,9 @@ import apprc from '../.apprc';
 import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import path from 'path';
-import { RoleGuard } from './role/role.guard';
 import { UserModule } from './user/user.module';
 import { RoleModule } from './role/role.module';
-import { UserService } from './user/user.service';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -35,12 +33,9 @@ import { UserService } from './user/user.service';
     }),
     UserModule,
     RoleModule,
+    NotificationModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    UserService,
-    { provide: APP_GUARD, useClass: RoleGuard },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

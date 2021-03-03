@@ -166,7 +166,7 @@ export class NotificationService {
         return { items, total };
       }
       default:
-        throw new BadRequestException('参数错误');
+        throw new BadRequestException();
     }
   }
 

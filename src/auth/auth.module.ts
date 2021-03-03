@@ -6,6 +6,7 @@ import { LocalStrategy } from './local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
+import { AuthController } from './auth.controller';
 // @ts-ignore
 import apprc from '../../.apprc';
 
@@ -15,6 +16,7 @@ import apprc from '../../.apprc';
     TypeOrmModule.forFeature([User]),
     JwtModule.register(apprc.jwt),
   ],
+  controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService],
 })

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import _ from 'lodash';
 import { UserService } from 'src/user/user.service';
@@ -12,7 +7,6 @@ import { UserService } from 'src/user/user.service';
 export class RoleGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    @Inject('UserService')
     private readonly userService: UserService,
   ) {}
 

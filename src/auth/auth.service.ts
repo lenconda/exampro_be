@@ -11,6 +11,10 @@ import md5 from 'md5';
 import { MailerService } from '@nestjs-modules/mailer';
 
 import apprc from '../../.apprc';
+import {
+  ERR_BODY_EMAIL_REQUIRED,
+  ERR_BODY_PASSWORD_REQUIRED,
+} from 'src/constants';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +50,13 @@ export class AuthService {
    * @param email email
    */
   async findUser(email: string) {
-    return await this.userRepository.findOne({ email, active: true });
+    return await this.userRepository.findOne({
+      where: {
+        email,
+        active: true,
+      },
+      relations: ['role'],
+    });
   }
 
   /**
@@ -57,10 +67,10 @@ export class AuthService {
   async active(email: string, code: string) {
     const user = await this.userRepository.findOne({ email, code });
     if (!user) {
-      throw new ForbiddenException('无法识别当前账户');
+      throw new ForbiddenException();
     }
     if (user.active) {
-      throw new BadRequestException('账户已激活，无需再次激活');
+      throw new BadRequestException();
     }
     await this.userRepository.update({ email }, { code: '', active: true });
     return {
@@ -76,10 +86,10 @@ export class AuthService {
   async login(email: string, password: string) {
     const result = await this.validateUser(email, password);
     if (!result) {
-      throw new ForbiddenException('账户名或密码错误');
+      throw new ForbiddenException();
     }
     if (!result.active) {
-      throw new ForbiddenException('在使用本服务前，请激活该账户');
+      throw new ForbiddenException();
     }
     return {
       token: this.sign(email),
@@ -92,8 +102,11 @@ export class AuthService {
    * @param password password
    */
   async register(email: string, password: string) {
-    if (!email || !password) {
-      throw new ForbiddenException('请将个人信息填写完整');
+    if (!email) {
+      throw new ForbiddenException(ERR_BODY_EMAIL_REQUIRED);
+    }
+    if (!password) {
+      throw new ForbiddenException(ERR_BODY_PASSWORD_REQUIRED);
     }
     const user = this.userRepository.create({
       email,
@@ -104,11 +117,11 @@ export class AuthService {
     await this.mailerService.sendMail({
       to: email,
       from: 'no-reply@lenconda.top',
-      subject: `【${apprc.name.toUpperCase()}】验证你的邮箱地址`,
+      subject: `[${apprc.name}] 验证你的邮箱地址`,
       template: 'mail',
       context: {
-        appName: apprc.name.toUpperCase(),
-        mainContent: `在不久前，这个邮箱被用于注册 ${apprc.name.toUpperCase()} 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证：`,
+        appName: apprc.name,
+        mainContent: `在不久前，这个邮箱被用于注册 ${apprc.name} 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证：`,
         linkHref: `${apprc.hostname}/user/active?m=${Buffer.from(
           user.email,
         ).toString('base64')}&c=${user.code}`,
@@ -135,10 +148,10 @@ export class AuthService {
     await this.mailerService.sendMail({
       to: email,
       from: 'no-reply@lenconda.top',
-      subject: `【${apprc.name.toUpperCase()}】修改你的账户密码`,
+      subject: `[${apprc.name}]修改你的账户密码`,
       template: 'mail',
       context: {
-        appName: apprc.name.toUpperCase(),
+        appName: apprc.name,
         mainContent: `在不久前，这个邮箱被绑定的 ${apprc.name} 账户发起忘记密码操作。因此，我们需要你点击下面的链接完成账户密码的重置：`,
         linkHref: `${apprc.hostname}/user/reset?m=${Buffer.from(email).toString(
           'base64',
@@ -163,7 +176,7 @@ export class AuthService {
       code,
     });
     if (!userInfo) {
-      throw new ForbiddenException('无法识别当前用户');
+      throw new ForbiddenException();
     }
     const newUserInfo: User = {
       ...userInfo,
