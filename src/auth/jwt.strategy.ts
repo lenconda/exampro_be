@@ -15,50 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(/* params */): Promise<any> {
-    /*
-      if (!validate_condition) {
-        throw new UnauthorizedException();
-      } else {
-        return await this.authService.findUser(some_payload);
-      }
-    */
+  async validate(payload: any) {
+    return await this.authService.findUser(payload.email);
   }
 }
-
-/**
- * @example xxx.controller.ts
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { User } from 'src/user/user.entity';
-import { CurrentUser } from '../user/user.decorator';
-import { PreferencesService } from './preferences.service';
-
-@Controller('/api')
-export class PreferencesController {
-  constructor() {}
-
-  @UseGuards(AuthGuard('jwt'))
-  @Get('/info')
-  async getInfo(@CurrentUser() user: User) {
-    return user;
-  }
-}
- */
-
-/**
- * @example user.decorator.ts
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-
-export const CurrentUser = createParamDecorator(
-  (data: string, context: ExecutionContext) => {
-    const user = context.switchToHttp().getRequest().user;
-
-    if (!user) {
-      return null;
-    }
-
-    return data ? user[data] : user;
-  },
-);
- */
