@@ -28,7 +28,7 @@ export class User {
   @Column({ default: false })
   active: boolean;
 
-  @Column({ nullable: true, name: 'active_expire' })
+  @Column({ nullable: true, name: 'active_expire', select: false })
   activeExpire: Date;
 
   @Column({ nullable: true })

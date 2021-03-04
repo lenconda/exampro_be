@@ -12,6 +12,10 @@ import { MailerService } from '@nestjs-modules/mailer';
 
 import apprc from '../../.apprc';
 import {
+  ERR_ACCOUNT_NOT_FOUND,
+  ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED,
+  ERR_ACTIVE_CODE_EXPIRED,
+  ERR_ACTIVE_CODE_INVALID,
   ERR_BODY_EMAIL_REQUIRED,
   ERR_BODY_PASSWORD_REQUIRED,
 } from 'src/constants';
@@ -65,14 +69,26 @@ export class AuthService {
    * @param code code
    */
   async active(email: string, code: string) {
-    const user = await this.userRepository.findOne({ email, code });
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['activeExpire', 'active', 'code'],
+    });
     if (!user) {
-      throw new ForbiddenException();
+      throw new ForbiddenException(ERR_ACCOUNT_NOT_FOUND);
     }
     if (user.active) {
-      throw new BadRequestException();
+      throw new BadRequestException(ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED);
     }
-    await this.userRepository.update({ email }, { code: '', active: true });
+    if (Date.now() > user.activeExpire.getTime()) {
+      throw new ForbiddenException(ERR_ACTIVE_CODE_EXPIRED);
+    }
+    if (user.code !== code) {
+      throw new ForbiddenException(ERR_ACTIVE_CODE_INVALID);
+    }
+    await this.userRepository.update(
+      { email },
+      { code: null, active: true, activeExpire: null },
+    );
     return {
       token: this.sign(email),
     };
@@ -113,6 +129,7 @@ export class AuthService {
       password: md5(password),
       avatar: '/assets/images/default_avatar.jpg',
       code: Math.floor(Math.random() * 1000000).toString(),
+      activeExpire: new Date(Date.now() + apprc.security.activeCodeExpiration),
     });
     await this.mailerService.sendMail({
       to: email,
@@ -121,7 +138,11 @@ export class AuthService {
       template: 'mail',
       context: {
         appName: apprc.name,
-        mainContent: `在不久前，这个邮箱被用于注册 ${apprc.name} 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证：`,
+        mainContent: `在不久前，这个邮箱被用于注册 ${
+          apprc.name
+        } 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证。此链接仅在 ${Math.floor(
+          apprc.security.activeCodeExpiration / 1000 / 60,
+        )} 分钟内有效，请及时验证：`,
         linkHref: `${apprc.hostname}/user/active?m=${Buffer.from(
           user.email,
         ).toString('base64')}&c=${user.code}`,
@@ -152,7 +173,11 @@ export class AuthService {
       template: 'mail',
       context: {
         appName: apprc.name,
-        mainContent: `在不久前，这个邮箱被绑定的 ${apprc.name} 账户发起忘记密码操作。因此，我们需要你点击下面的链接完成账户密码的重置：`,
+        mainContent: `在不久前，这个邮箱被绑定的 ${
+          apprc.name
+        } 账户发起忘记密码操作。因此，我们需要你点击下面的链接完成账户密码的重置。此链接仅在 ${Math.floor(
+          apprc.security.activeCodeExpiration / 1000 / 60,
+        )} 分钟内有效，请及时验证：`,
         linkHref: `${apprc.hostname}/user/reset?m=${Buffer.from(email).toString(
           'base64',
         )}&c=${code}`,
@@ -160,7 +185,11 @@ export class AuthService {
         placeholder: '',
       },
     });
-    await this.userRepository.save({ ...userInfo, code });
+    await this.userRepository.save({
+      ...userInfo,
+      code,
+      activeExpire: new Date(Date.now() + apprc.security.activeCodeExpiration),
+    });
     return {};
   }
 

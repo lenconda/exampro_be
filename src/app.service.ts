@@ -7,6 +7,7 @@ import { parseRolesTree } from './utils/parsers';
 import { User } from './user/user.entity';
 import apprc from '../.apprc';
 import { UserRole } from './role/user_role.entity';
+import md5 from 'md5';
 
 @Injectable()
 export class AppService {
@@ -45,7 +46,7 @@ export class AppService {
       email: apprc.rootAdmin.email,
       name: 'Admin',
       active: true,
-      password: apprc.rootAdmin.password,
+      password: md5(apprc.rootAdmin.password),
     });
     await this.userRepository
       .createQueryBuilder()
