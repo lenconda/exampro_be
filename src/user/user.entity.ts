@@ -63,5 +63,5 @@ export class User {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  userRoles: UserNotification[];
+  userRoles: UserRole[];
 }

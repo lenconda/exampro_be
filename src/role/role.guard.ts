@@ -1,14 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import _ from 'lodash';
-import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const roleNames = this.reflector.get<string[]>(
@@ -24,11 +20,11 @@ export class RoleGuard implements CanActivate {
     const user = request.user;
 
     const hasRole = () => {
-      return user.userRoles
-        .map((userRole) => userRole.name)
-        .some((roleName) => roleNames.includes(roleName)); // 是否匹配到角色
+      return user.roles
+        .map((role) => role.id)
+        .some((roleId) => roleNames.includes(roleId)); // 是否匹配到角色
     };
 
-    return user && user.userRoles && _.isArray(user.userRoles) && hasRole();
+    return user && user.roles && _.isArray(user.roles) && hasRole();
   }
 }

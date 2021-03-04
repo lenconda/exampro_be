@@ -9,7 +9,6 @@ import { Repository } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import md5 from 'md5';
 import { MailerService } from '@nestjs-modules/mailer';
-
 import apprc from '../../.apprc';
 import {
   ERR_ACCOUNT_NOT_FOUND,
@@ -22,6 +21,7 @@ import {
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 import { generateActiveCode } from 'src/utils/generators';
+import _ from 'lodash';
 
 @Injectable()
 export class AuthService {
@@ -61,13 +61,22 @@ export class AuthService {
    * @param email email
    */
   async findUser(email: string) {
-    return await this.userRepository.findOne({
+    const userInfo = await this.userRepository.findOne({
       where: {
         email,
         active: true,
       },
-      relations: ['role'],
+      relations: ['userRoles', 'userRoles.role'],
     });
+
+    const roles = ((userInfo.userRoles || []) as UserRole[]).map(
+      (userRole: UserRole) => userRole.role,
+    );
+
+    return {
+      ..._.omit(userInfo, ['userRoles']),
+      roles,
+    };
   }
 
   /**
