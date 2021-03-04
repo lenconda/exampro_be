@@ -19,10 +19,10 @@ export class User {
   @Column({ select: false })
   password: string;
 
-  @Column()
+  @Column({ default: '/assets/images/default_avatar.jpg' })
   avatar: string;
 
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   code: string;
 
   @Column({ default: false })

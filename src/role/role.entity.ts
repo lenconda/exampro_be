@@ -1,21 +1,17 @@
 import {
   Entity,
-  Column,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  PrimaryGeneratedColumn,
   OneToMany,
+  PrimaryColumn,
 } from 'typeorm';
 import { UserRole } from './user_role.entity';
 
 @Entity({ name: 'roles' })
 export class Role {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: string;
-
-  @Column({ unique: true })
-  name: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

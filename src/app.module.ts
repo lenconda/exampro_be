@@ -15,6 +15,8 @@ import { UserModule } from './user/user.module';
 import { RoleModule } from './role/role.module';
 import { NotificationModule } from './notification/notification.module';
 import { Role } from './role/role.entity';
+import { User } from './user/user.entity';
+import { UserRole } from './role/user_role.entity';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { Role } from './role/role.entity';
       keepConnectionAlive: true,
       synchronize: true,
     } as TypeOrmModuleOptions),
-    TypeOrmModule.forFeature([Role]),
+    TypeOrmModule.forFeature([Role, User, UserRole]),
     AuthModule,
     MailerModule.forRoot({
       transport: apprc.smtp,

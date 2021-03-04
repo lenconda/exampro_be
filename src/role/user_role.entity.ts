@@ -7,11 +7,13 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
 
 @Entity({ name: 'user_role' })
+@Unique(['user', 'role'])
 export class UserRole {
   @PrimaryGeneratedColumn()
   id: number;

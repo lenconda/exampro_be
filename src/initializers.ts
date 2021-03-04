@@ -8,7 +8,21 @@ export const generateRoles = () => {
     {
       name: 'user',
       children: [
-        { name: 'system' },
+        { name: 'normal' },
+        {
+          name: 'admin',
+          children: [
+            { name: 'system' },
+            { name: 'user' },
+            { name: 'report' },
+            { name: 'layout' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'resource',
+      children: [
         {
           name: 'question_base',
           children: [
@@ -29,15 +43,6 @@ export const generateRoles = () => {
             { name: 'participant' },
           ],
         },
-      ],
-    },
-    {
-      name: 'admin',
-      children: [
-        { name: 'system' },
-        { name: 'user' },
-        { name: 'report' },
-        { name: 'layout' },
       ],
     },
   ];
