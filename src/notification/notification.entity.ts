@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -30,6 +31,7 @@ export class Notification {
   broadcast: boolean;
 
   @ManyToOne(() => User, (user) => user.sendedNotifications)
+  @JoinColumn({ name: 'sender_email' })
   sender: User;
 
   @OneToMany(

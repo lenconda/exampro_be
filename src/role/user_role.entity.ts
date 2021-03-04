@@ -29,10 +29,10 @@ export class UserRole {
   checked: boolean;
 
   @ManyToOne(() => User, (user) => user.userRoles)
-  @JoinColumn({ name: 'email' })
+  @JoinColumn({ name: 'user_email' })
   user: User;
 
   @ManyToOne(() => Role, (role) => role.userRoles)
-  @JoinColumn({ name: 'id' })
+  @JoinColumn({ name: 'role_id' })
   role: Role;
 }

@@ -29,13 +29,13 @@ export class UserNotification {
   checked: boolean;
 
   @ManyToOne(() => User, (user) => user.userNotifications)
-  @JoinColumn({ name: 'email' })
+  @JoinColumn({ name: 'user_email' })
   user: User;
 
   @ManyToOne(
     () => Notification,
     (notification) => notification.userNotifications,
   )
-  @JoinColumn({ name: 'id' })
+  @JoinColumn({ name: 'notification_id' })
   notification: Notification;
 }

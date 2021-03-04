@@ -6,6 +6,8 @@ import {
   DeleteDateColumn,
   PrimaryGeneratedColumn,
   OneToMany,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { UserRole } from './user_role.entity';
 
@@ -31,4 +33,12 @@ export class Role {
     onUpdate: 'CASCADE',
   })
   userRoles: UserRole[];
+
+  @OneToOne(() => Role, {
+    nullable: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'parent' })
+  parent: Role;
 }
