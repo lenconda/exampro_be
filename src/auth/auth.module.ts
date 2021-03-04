@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from '../user/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,6 +12,7 @@ import apprc from '../../.apprc';
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 
+@Global()
 @Module({
   imports: [
     PassportModule,

@@ -17,6 +17,8 @@ import { NotificationModule } from './notification/notification.module';
 import { Role } from './role/role.entity';
 import { User } from './user/user.entity';
 import { UserRole } from './role/user_role.entity';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { RenewInterceptor } from './auth/renew.interceptor';
 
 @Module({
   imports: [
@@ -40,6 +42,12 @@ import { UserRole } from './role/user_role.entity';
     NotificationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RenewInterceptor,
+    },
+  ],
 })
 export class AppModule {}
