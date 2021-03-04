@@ -19,6 +19,9 @@ import {
   ERR_BODY_EMAIL_REQUIRED,
   ERR_BODY_PASSWORD_REQUIRED,
 } from 'src/constants';
+import { UserRole } from 'src/role/user_role.entity';
+import { Role } from 'src/role/role.entity';
+import { generateActiveCode } from 'src/utils/generators';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +30,10 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly mailerService: MailerService,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
 
   /**
@@ -124,11 +131,12 @@ export class AuthService {
     if (!password) {
       throw new ForbiddenException(ERR_BODY_PASSWORD_REQUIRED);
     }
+    const code = generateActiveCode();
     const user = this.userRepository.create({
       email,
       password: md5(password),
       avatar: '/assets/images/default_avatar.jpg',
-      code: Math.floor(Math.random() * 1000000).toString(),
+      code,
       activeExpire: new Date(Date.now() + apprc.security.activeCodeExpiration),
     });
     await this.mailerService.sendMail({
@@ -151,6 +159,9 @@ export class AuthService {
       },
     });
     await this.userRepository.insert(user);
+    const role = await this.roleRepository.findOne({ id: 'user/normal' });
+    const userRole = this.userRoleRepository.create({ user, role });
+    await this.userRoleRepository.save(userRole);
     return {
       token: this.sign(email),
     };
@@ -165,7 +176,7 @@ export class AuthService {
     if (!userInfo) {
       return {};
     }
-    const code = Math.floor(Math.random() * 1000000).toString();
+    const code = generateActiveCode();
     await this.mailerService.sendMail({
       to: email,
       from: 'no-reply@lenconda.top',

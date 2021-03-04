@@ -9,11 +9,13 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 // @ts-ignore
 import apprc from '../../.apprc';
+import { UserRole } from 'src/role/user_role.entity';
+import { Role } from 'src/role/role.entity';
 
 @Module({
   imports: [
     PassportModule,
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, UserRole, Role]),
     JwtModule.register(apprc.jwt),
   ],
   controllers: [AuthController],
