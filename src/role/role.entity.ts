@@ -6,6 +6,7 @@ import {
   OneToMany,
   PrimaryColumn,
 } from 'typeorm';
+import { MenuRole } from './menu_role.entity';
 import { UserRole } from './user_role.entity';
 
 @Entity({ name: 'roles' })
@@ -27,4 +28,10 @@ export class Role {
     onUpdate: 'CASCADE',
   })
   userRoles: UserRole[];
+
+  @OneToMany(() => MenuRole, (menuRole) => menuRole.role, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  menuRoles: MenuRole[];
 }

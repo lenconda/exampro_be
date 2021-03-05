@@ -18,6 +18,8 @@ import { AuthInterceptor } from './auth/auth.interceptor';
 import { RedisModule } from 'nestjs-redis';
 import { ConfigService } from './config/config.service';
 import { ConfigModule } from './config/config.module';
+import { MenuModule } from './menu/menu.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { ConfigModule } from './config/config.module';
     UserModule,
     RoleModule,
     NotificationModule,
+    MenuModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
