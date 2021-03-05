@@ -68,6 +68,11 @@ export class AuthService {
     return this.jwtService.decode(token) as Record<string, any>;
   }
 
+  async checkToken(token: string) {
+    const existence = await this.redis.exists(token);
+    return Boolean(existence);
+  }
+
   async blockToken(token: string) {
     const currentTimestamp = Date.now();
     const { exp = currentTimestamp / 1000 } = this.decode(token);

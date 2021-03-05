@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -22,6 +23,11 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
     const request = context.switchToHttp().getRequest();
     const pathname = request.path;
     const token = ((request?.headers?.authorization as string) || '').slice(7);
+    const isTokenBlocked = await this.authService.checkToken(token);
+
+    if (isTokenBlocked) {
+      throw new UnauthorizedException();
+    }
 
     /**
      * 如果请求登出接口，将要把当前的 token 加入黑名单
