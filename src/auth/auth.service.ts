@@ -22,6 +22,8 @@ import { Role } from 'src/role/role.entity';
 import { generateActiveCode } from 'src/utils/generators';
 import _ from 'lodash';
 import { ConfigService } from 'src/config/config.service';
+import { RedisService } from 'nestjs-redis';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +37,12 @@ export class AuthService {
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly redisService: RedisService,
+  ) {
+    this.redis = redisService.getClient();
+  }
+
+  private redis: Redis;
 
   /**
    * validate user
@@ -55,6 +62,25 @@ export class AuthService {
    */
   sign(email: string) {
     return this.jwtService.sign({ email });
+  }
+
+  decode(token: string): Record<string, any> {
+    return this.jwtService.decode(token) as Record<string, any>;
+  }
+
+  async blockToken(token: string) {
+    const currentTimestamp = Date.now();
+    const { exp = currentTimestamp / 1000 } = this.decode(token);
+    const expirationTimestamp = exp * 1000;
+    if (expirationTimestamp <= currentTimestamp) {
+      return;
+    }
+    await this.redis.set(
+      token,
+      new Date().toISOString(),
+      'EX',
+      Math.round((expirationTimestamp - currentTimestamp) / 1000 + 86400),
+    );
   }
 
   /**
@@ -127,6 +153,10 @@ export class AuthService {
     return {
       token: this.sign(email),
     };
+  }
+
+  async logout(redirect: string) {
+    return { redirect };
   }
 
   /**

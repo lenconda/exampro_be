@@ -13,6 +13,11 @@ export class AuthController {
     return await this.authService.login(email, password);
   }
 
+  @Post('/logout')
+  async logout(@Body('redirect') redirect = '') {
+    return await this.authService.logout(redirect);
+  }
+
   @Post('/register')
   async register(
     @Body('email') email: string,

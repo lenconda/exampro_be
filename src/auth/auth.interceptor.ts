@@ -3,36 +3,46 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Inject,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import jwt from 'jsonwebtoken';
 import _ from 'lodash';
 
 export type Response = Record<string, any>;
 
 @Injectable()
-export class RenewInterceptor<T> implements NestInterceptor<T, Response> {
-  constructor(
-    @Inject('AuthService')
-    private readonly authService: AuthService,
-  ) {}
+export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
+  constructor(private readonly authService: AuthService) {}
 
-  intercept(
+  async intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Observable<Response> {
+  ): Promise<Observable<Response>> {
     const request = context.switchToHttp().getRequest();
+    const pathname = request.path;
     const token = ((request?.headers?.authorization as string) || '').slice(7);
+
+    /**
+     * 如果请求登出接口，将要把当前的 token 加入黑名单
+     */
+    if (pathname === '/api/auth/logout') {
+      await this.authService.blockToken(token);
+      return next.handle();
+    }
+
     const user = request?.user || {};
     const email = user?.email || '';
+
     if (token && email) {
-      const payload = jwt.decode(token);
+      const payload = this.authService.decode(token);
       const { exp = Date.now() / 1000 } = payload as Record<string, any>;
       const expireTimestamp = exp * 1000;
       const additionalResponseData = {} as Record<string, any>;
+
+      /**
+       * 如果当前 token 还差一分钟就要过期，则更新一次 token
+       */
       if (expireTimestamp - Date.now() < 60000) {
         additionalResponseData.token = this.authService.sign(email);
       }

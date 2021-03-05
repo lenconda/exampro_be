@@ -14,7 +14,7 @@ import { Role } from './role/role.entity';
 import { User } from './user/user.entity';
 import { UserRole } from './role/user_role.entity';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RenewInterceptor } from './auth/renew.interceptor';
+import { AuthInterceptor } from './auth/auth.interceptor';
 import { RedisModule } from 'nestjs-redis';
 import { ConfigService } from './config/config.service';
 import { ConfigModule } from './config/config.module';
@@ -62,7 +62,7 @@ import { ConfigModule } from './config/config.module';
     AppService,
     {
       provide: APP_INTERCEPTOR,
-      useClass: RenewInterceptor,
+      useClass: AuthInterceptor,
     },
   ],
 })
