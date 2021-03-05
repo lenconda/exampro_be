@@ -9,7 +9,6 @@ import { Repository } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import md5 from 'md5';
 import { MailerService } from '@nestjs-modules/mailer';
-import apprc from '../../.apprc';
 import {
   ERR_ACCOUNT_NOT_FOUND,
   ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED,
@@ -22,6 +21,7 @@ import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 import { generateActiveCode } from 'src/utils/generators';
 import _ from 'lodash';
+import { ConfigService } from 'src/config/config.service';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +34,7 @@ export class AuthService {
     private readonly userRoleRepository: Repository<UserRole>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -140,29 +141,31 @@ export class AuthService {
     if (!password) {
       throw new ForbiddenException(ERR_BODY_PASSWORD_REQUIRED);
     }
+    const { activeCodeExpiration } = this.configService.get('security') as {
+      activeCodeExpiration: number;
+    };
+    const { name, hostname } = this.configService.get();
     const code = generateActiveCode();
     const user = this.userRepository.create({
       email,
       password: md5(password),
       avatar: '/assets/images/default_avatar.jpg',
       code,
-      activeExpire: new Date(Date.now() + apprc.security.activeCodeExpiration),
+      activeExpire: new Date(Date.now() + activeCodeExpiration),
     });
     await this.mailerService.sendMail({
       to: email,
       from: 'no-reply@lenconda.top',
-      subject: `[${apprc.name}] 验证你的邮箱地址`,
+      subject: `[${name}] 验证你的邮箱地址`,
       template: 'mail',
       context: {
-        appName: apprc.name,
-        mainContent: `在不久前，这个邮箱被用于注册 ${
-          apprc.name
-        } 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证。此链接仅在 ${Math.floor(
-          apprc.security.activeCodeExpiration / 1000 / 60,
+        appName: name,
+        mainContent: `在不久前，这个邮箱被用于注册 ${name} 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证。此链接仅在 ${Math.floor(
+          activeCodeExpiration / 1000 / 60,
         )} 分钟内有效，请及时验证：`,
-        linkHref: `${apprc.hostname}/user/active?m=${Buffer.from(
-          user.email,
-        ).toString('base64')}&c=${user.code}`,
+        linkHref: `${hostname}/user/active?m=${Buffer.from(user.email).toString(
+          'base64',
+        )}&c=${user.code}`,
         linkContent: '验证邮箱地址',
         placeholder: '',
       },
@@ -185,20 +188,22 @@ export class AuthService {
     if (!userInfo) {
       return {};
     }
+    const { name, hostname } = this.configService.get();
+    const { activeCodeExpiration } = this.configService.get('security') as {
+      activeCodeExpiration: number;
+    };
     const code = generateActiveCode();
     await this.mailerService.sendMail({
       to: email,
       from: 'no-reply@lenconda.top',
-      subject: `[${apprc.name}]修改你的账户密码`,
+      subject: `[${name}]修改你的账户密码`,
       template: 'mail',
       context: {
-        appName: apprc.name,
-        mainContent: `在不久前，这个邮箱被绑定的 ${
-          apprc.name
-        } 账户发起忘记密码操作。因此，我们需要你点击下面的链接完成账户密码的重置。此链接仅在 ${Math.floor(
-          apprc.security.activeCodeExpiration / 1000 / 60,
+        appName: name,
+        mainContent: `在不久前，这个邮箱被绑定的 ${name} 账户发起忘记密码操作。因此，我们需要你点击下面的链接完成账户密码的重置。此链接仅在 ${Math.floor(
+          activeCodeExpiration / 1000 / 60,
         )} 分钟内有效，请及时验证：`,
-        linkHref: `${apprc.hostname}/user/reset?m=${Buffer.from(email).toString(
+        linkHref: `${hostname}/user/reset?m=${Buffer.from(email).toString(
           'base64',
         )}&c=${code}`,
         linkContent: '重置账户密码',
@@ -208,7 +213,7 @@ export class AuthService {
     await this.userRepository.save({
       ...userInfo,
       code,
-      activeExpire: new Date(Date.now() + apprc.security.activeCodeExpiration),
+      activeExpire: new Date(Date.now() + activeCodeExpiration),
     });
     return {};
   }

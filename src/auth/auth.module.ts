@@ -7,17 +7,19 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
-// @ts-ignore
-import apprc from '../../.apprc';
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
+import { ConfigService } from 'src/config/config.service';
 
 @Global()
 @Module({
   imports: [
     PassportModule,
     TypeOrmModule.forFeature([User, UserRole, Role]),
-    JwtModule.register(apprc.jwt),
+    JwtModule.registerAsync({
+      useFactory: (config: ConfigService) => config.get('jwt'),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],

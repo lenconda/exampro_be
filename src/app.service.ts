@@ -5,9 +5,9 @@ import { Role } from './role/role.entity';
 import { generateRoles } from './initializers';
 import { parseRolesTree } from './utils/parsers';
 import { User } from './user/user.entity';
-import apprc from '../.apprc';
 import { UserRole } from './role/user_role.entity';
 import md5 from 'md5';
+import { ConfigService } from './config/config.service';
 
 @Injectable()
 export class AppService {
@@ -18,6 +18,7 @@ export class AppService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
+    private readonly configService: ConfigService,
   ) {
     this.initializer();
   }
@@ -42,11 +43,12 @@ export class AppService {
   }
 
   private async initializeRootAdmin() {
+    const { email, password } = this.configService.get('rootAdmin');
     const admin = this.userRepository.create({
-      email: apprc.rootAdmin.email,
+      email,
       name: 'Admin',
       active: true,
-      password: md5(apprc.rootAdmin.password),
+      password: md5(password),
     });
     await this.userRepository
       .createQueryBuilder()

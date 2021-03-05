@@ -30,6 +30,7 @@
     "lodash": "^4.17.21",
     "md5": "^2.3.0",
     "mysql": "^2.18.1",
+    "nestjs-redis": "^1.2.8",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
