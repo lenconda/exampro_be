@@ -5,6 +5,7 @@ import {
   DeleteDateColumn,
   OneToMany,
   PrimaryColumn,
+  Column,
 } from 'typeorm';
 import { MenuRole } from './menu_role.entity';
 import { UserRole } from './user_role.entity';
@@ -13,6 +14,9 @@ import { UserRole } from './user_role.entity';
 export class Role {
   @PrimaryColumn()
   id: string;
+
+  @Column({ nullable: true })
+  description: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
