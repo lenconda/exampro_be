@@ -117,10 +117,12 @@ export class UserService {
   }
 
   async checkUserBanStatus(email: string) {
-    const status = await this.redis.get(`ban:user:${email}`);
+    const key = `ban:user:${email}`;
+    const status = await this.redis.get(key);
     if (!status) {
       return false;
     }
-    return status;
+    const ttl = await this.redis.ttl(key);
+    return { status, ttl };
   }
 }

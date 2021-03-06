@@ -48,7 +48,8 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
     const banStatus = await this.userService.checkUserBanStatus(email);
 
     if (banStatus) {
-      throw new ForbiddenException(`${ERR_USER_BANNED}:${banStatus}`);
+      const { status, ttl } = banStatus;
+      throw new ForbiddenException(`${ERR_USER_BANNED}:${status}:${ttl}`);
     }
 
     if (token && email) {
