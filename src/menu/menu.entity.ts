@@ -22,7 +22,7 @@ export class Menu {
   @Column({ nullable: true })
   icon: string;
 
-  @Column()
+  @Column({ unique: true })
   pathname: string;
 
   @OneToMany(() => Menu, (menu) => menu.id, {

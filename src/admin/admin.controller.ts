@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { MenuService } from 'src/menu/menu.service';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
 import { UserService } from 'src/user/user.service';
@@ -17,7 +18,10 @@ import { UserService } from 'src/user/user.service';
 @Controller('/api/admin')
 @UseGuards(AuthGuard('jwt'), RoleGuard)
 export class AdminController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly menuService: MenuService,
+  ) {}
 
   @Post()
   @Role('user/admin/system', 'user/admin/user')
@@ -59,5 +63,23 @@ export class AdminController {
   @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async unblockUser(@Param('email') email: string) {
     return await this.userService.unblockUser(email);
+  }
+
+  @Post('/menu')
+  @Role('user/admin/system', 'user/admin/menu', 'user/admin/role')
+  async createMenuItem(
+    @Body('title') title: string,
+    @Body('pathname') pathname: string,
+    @Body('icon') icon: string,
+    @Body('parent') parent: string,
+    @Body('roles') roles: string[],
+  ) {
+    return await this.menuService.createMenuItem(
+      title,
+      pathname,
+      icon,
+      parent,
+      roles,
+    );
   }
 }

@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -18,12 +19,14 @@ export class MenuRole {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
+  @JoinColumn({ name: 'menu_id' })
   menu: Menu;
 
   @ManyToOne(() => Role, (role) => role.menuRoles, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
+  @JoinColumn({ name: 'role_id' })
   role: Role;
 
   @CreateDateColumn({ name: 'created_at' })
