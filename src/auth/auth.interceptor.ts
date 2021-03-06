@@ -4,14 +4,12 @@ import {
   ExecutionContext,
   CallHandler,
   UnauthorizedException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import _ from 'lodash';
 import { UserService } from 'src/user/user.service';
-import { ERR_USER_BANNED } from 'src/constants';
 
 export type Response = Record<string, any>;
 
@@ -45,12 +43,8 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
 
     const user = request?.user || {};
     const email = user?.email || '';
-    const banStatus = await this.userService.checkUserBanStatus(email);
 
-    if (banStatus) {
-      const { status, ttl } = banStatus;
-      throw new ForbiddenException(`${ERR_USER_BANNED}:${status}:${ttl}`);
-    }
+    await this.userService.checkUserBanStatus(email);
 
     if (token && email) {
       const payload = this.authService.decode(token);

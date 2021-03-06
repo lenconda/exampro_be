@@ -53,10 +53,14 @@ export class AuthService {
    * @param password password
    */
   async validateUser(email: string, password: string) {
-    return await this.userRepository.findOne({
+    await this.userService.checkUserBanStatus(email);
+
+    const user = await this.userRepository.findOne({
       email,
       password: md5(password),
     });
+
+    return user;
   }
 
   /**

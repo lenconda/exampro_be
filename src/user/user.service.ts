@@ -11,7 +11,11 @@ import { Role } from 'src/role/role.entity';
 import { UserRole } from 'src/role/user_role.entity';
 import { queryWithPagination } from 'src/utils/pagination';
 import _ from 'lodash';
-import { ERR_ACCOUNT_NOT_FOUND, ERR_USER_INACTIVE } from 'src/constants';
+import {
+  ERR_ACCOUNT_NOT_FOUND,
+  ERR_USER_BANNED,
+  ERR_USER_INACTIVE,
+} from 'src/constants';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
 
@@ -94,15 +98,30 @@ export class UserService {
     };
   }
 
+  private async getUserBanStatus(email: string) {
+    const key = `ban:user:${email}`;
+    const banStatus = await this.redis.get(key);
+    if (!banStatus) {
+      return;
+    }
+    const ttl = await this.redis.ttl(key);
+    return { banStatus, ttl };
+  }
+
   async blockUser(email: string, type: string, days: number) {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
-    if (days === -1) {
-      await this.redis.set(`ban:user:${email}`, type);
+    const key = `ban:user:${email}`;
+    const userBlockRecord = (await this.getUserBanStatus(email)) || {
+      ttl: 0,
+    };
+    const { ttl } = userBlockRecord;
+    if (ttl === -1 || days === -1) {
+      await this.redis.set(key, type);
     } else {
-      await this.redis.set(`ban:user:${email}`, type, 'EX', days * 86400);
+      await this.redis.set(key, type, 'EX', ttl + days * 86400);
     }
     return user;
   }
@@ -117,12 +136,15 @@ export class UserService {
   }
 
   async checkUserBanStatus(email: string) {
-    const key = `ban:user:${email}`;
-    const status = await this.redis.get(key);
-    if (!status) {
-      return false;
+    const userBlockRecord = await this.getUserBanStatus(email);
+
+    if (!userBlockRecord) {
+      return;
     }
-    const ttl = await this.redis.ttl(key);
-    return { status, ttl };
+
+    const { banStatus, ttl } = userBlockRecord;
+
+    const code = banStatus.split('\n').join(':');
+    throw new ForbiddenException(`${ERR_USER_BANNED}::${code}::${ttl}`);
   }
 }
