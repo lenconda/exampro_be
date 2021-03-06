@@ -10,11 +10,13 @@ import { AuthController } from './auth.controller';
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 import { ConfigService } from 'src/config/config.service';
+import { UserModule } from 'src/user/user.module';
 
 @Global()
 @Module({
   imports: [
     PassportModule,
+    UserModule,
     TypeOrmModule.forFeature([User, UserRole, Role]),
     JwtModule.registerAsync({
       useFactory: (config: ConfigService) => config.get('jwt'),

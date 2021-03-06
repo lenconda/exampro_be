@@ -26,6 +26,7 @@ import _ from 'lodash';
 import { ConfigService } from 'src/config/config.service';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
@@ -40,6 +41,7 @@ export class AuthService {
     private readonly roleRepository: Repository<Role>,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly userService: UserService,
   ) {
     this.redis = redisService.getClient();
   }
@@ -183,13 +185,12 @@ export class AuthService {
     };
     const { name, hostname } = this.configService.get();
     const code = generateActiveCode();
-    const user = this.userRepository.create({
+    const user = await this.userService.createUser(
       email,
-      password: md5(password),
-      avatar: '/assets/images/default_avatar.jpg',
+      password,
       code,
-      activeExpire: new Date(Date.now() + activeCodeExpiration),
-    });
+      activeCodeExpiration,
+    );
     await this.mailerService.sendMail({
       to: email,
       from: 'no-reply@lenconda.top',
@@ -207,7 +208,6 @@ export class AuthService {
         placeholder: '',
       },
     });
-    await this.userRepository.insert(user);
     const role = await this.roleRepository.findOne({ id: 'user/normal' });
     const userRole = this.userRoleRepository.create({ user, role });
     await this.userRoleRepository.save(userRole);
