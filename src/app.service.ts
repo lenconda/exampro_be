@@ -8,6 +8,7 @@ import { User } from './user/user.entity';
 import { UserRole } from './role/user_role.entity';
 import md5 from 'md5';
 import { ConfigService } from './config/config.service';
+import { AdminService } from './admin/admin.service';
 
 @Injectable()
 export class AppService {
@@ -19,6 +20,7 @@ export class AppService {
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
     private readonly configService: ConfigService,
+    private readonly adminService: AdminService,
   ) {
     this.initializer();
   }
@@ -46,7 +48,7 @@ export class AppService {
     const { email, password } = this.configService.get('rootAdmin');
     const admin = this.userRepository.create({
       email,
-      name: 'Admin',
+      name: 'root',
       active: true,
       password: md5(password),
     });

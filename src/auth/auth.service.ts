@@ -14,8 +14,10 @@ import {
   ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED,
   ERR_ACTIVE_CODE_EXPIRED,
   ERR_ACTIVE_CODE_INVALID,
+  ERR_AUTHENTICATION_FAILED,
   ERR_BODY_EMAIL_REQUIRED,
   ERR_BODY_PASSWORD_REQUIRED,
+  ERR_USER_INACTIVE,
 } from 'src/constants';
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
@@ -150,10 +152,10 @@ export class AuthService {
   async login(email: string, password: string) {
     const result = await this.validateUser(email, password);
     if (!result) {
-      throw new ForbiddenException();
+      throw new ForbiddenException(ERR_AUTHENTICATION_FAILED);
     }
     if (!result.active) {
-      throw new ForbiddenException();
+      throw new ForbiddenException(ERR_USER_INACTIVE);
     }
     return {
       token: this.sign(email),

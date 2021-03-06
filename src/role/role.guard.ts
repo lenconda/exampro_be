@@ -1,6 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import _ from 'lodash';
+import minimatch from 'minimatch';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -22,7 +23,11 @@ export class RoleGuard implements CanActivate {
     const hasRole = () => {
       return user.roles
         .map((role) => role.id)
-        .some((roleId) => roleNames.includes(roleId)); // 是否匹配到角色
+        .some(
+          (roleId) =>
+            roleNames.filter((roleName) => minimatch(roleId, roleName)).length >
+            0,
+        ); // 是否匹配到角色
     };
 
     return user && user.roles && _.isArray(user.roles) && hasRole();

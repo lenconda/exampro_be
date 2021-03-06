@@ -16,6 +16,7 @@ export const generateRoles = () => {
             { name: 'user' },
             { name: 'report' },
             { name: 'layout' },
+            { name: 'role' },
           ],
         },
       ],
