@@ -1,10 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import md5 from 'md5';
 import { Role } from 'src/role/role.entity';
 import { UserRole } from 'src/role/user_role.entity';
+import { queryWithPagination } from 'src/utils/pagination';
+import _ from 'lodash';
+import { ERR_ACCOUNT_NOT_FOUND, ERR_USER_INACTIVE } from 'src/constants';
+import { RedisService } from 'nestjs-redis';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export class UserService {
@@ -15,7 +24,12 @@ export class UserService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
-  ) {}
+    private readonly redisService: RedisService,
+  ) {
+    this.redis = redisService.getClient();
+  }
+
+  private redis: Redis;
 
   async createUser(email: string, password: string, code: string, exp: number) {
     const user = this.userRepository.create({
@@ -47,5 +61,66 @@ export class UserService {
     await this.userRepository.save(adminUser);
     await this.userRoleRepository.save(userRoles);
     return adminUser;
+  }
+
+  async getUserList<T>(lastCursor: T, size = -1, order = 'asc') {
+    return await queryWithPagination<T>(this.userRepository, lastCursor, size, {
+      cursorColumn: 'email',
+      query: {
+        order: {
+          email: order.toUpperCase() as 'ASC' | 'DESC',
+        },
+      },
+    });
+  }
+
+  async getUserProfile(email: string) {
+    const userInfo = await this.userRepository.findOne({
+      where: { email },
+      relations: ['userRoles', 'userRoles.role'],
+    });
+
+    if (!userInfo.active) {
+      throw new ForbiddenException(ERR_USER_INACTIVE);
+    }
+
+    const roles = ((userInfo.userRoles || []) as UserRole[]).map(
+      (userRole: UserRole) => userRole.role,
+    );
+
+    return {
+      ..._.omit(userInfo, ['userRoles']),
+      roles,
+    };
+  }
+
+  async blockUser(email: string, type: string, days: number) {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
+    }
+    if (days === -1) {
+      await this.redis.set(`ban:user:${email}`, type);
+    } else {
+      await this.redis.set(`ban:user:${email}`, type, 'EX', days * 86400);
+    }
+    return user;
+  }
+
+  async unblockUser(email: string) {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
+    }
+    await this.redis.del(`ban:user:${email}`);
+    return user;
+  }
+
+  async checkUserBanStatus(email: string) {
+    const status = await this.redis.get(`ban:user:${email}`);
+    if (!status) {
+      return false;
+    }
+    return status;
   }
 }

@@ -22,7 +22,6 @@ import {
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 import { generateActiveCode } from 'src/utils/generators';
-import _ from 'lodash';
 import { ConfigService } from 'src/config/config.service';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
@@ -73,7 +72,7 @@ export class AuthService {
   }
 
   async checkToken(token: string) {
-    const existence = await this.redis.exists(token);
+    const existence = await this.redis.exists(`token:${token}`);
     return Boolean(existence);
   }
 
@@ -85,34 +84,11 @@ export class AuthService {
       return;
     }
     await this.redis.set(
-      token,
+      `token:${token}`,
       new Date().toISOString(),
       'EX',
       Math.round((expirationTimestamp - currentTimestamp) / 1000 + 86400),
     );
-  }
-
-  /**
-   * find a user
-   * @param email email
-   */
-  async findUser(email: string) {
-    const userInfo = await this.userRepository.findOne({
-      where: {
-        email,
-        active: true,
-      },
-      relations: ['userRoles', 'userRoles.role'],
-    });
-
-    const roles = ((userInfo.userRoles || []) as UserRole[]).map(
-      (userRole: UserRole) => userRole.role,
-    );
-
-    return {
-      ..._.omit(userInfo, ['userRoles']),
-      roles,
-    };
   }
 
   /**
