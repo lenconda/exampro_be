@@ -42,11 +42,12 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
 
     await this.authService.checkUserBanStatus(email);
 
+    const additionalResponseData = {} as Record<string, any>;
+
     if (token && email) {
       const payload = this.authService.decode(token);
       const { exp = Date.now() / 1000 } = payload as Record<string, any>;
       const expireTimestamp = exp * 1000;
-      const additionalResponseData = {} as Record<string, any>;
 
       /**
        * 如果当前 token 还差一分钟就要过期，则更新一次 token
@@ -54,17 +55,16 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
       if (expireTimestamp - Date.now() < 60000) {
         additionalResponseData.token = this.authService.sign(email);
       }
-      return next.handle().pipe(
-        map(async (data) => {
-          const result = _.merge(data, additionalResponseData);
-          if (result.token) {
-            await this.authService.blockToken(token);
-          }
-          return result;
-        }),
-      );
-    } else {
-      return next.handle();
     }
+
+    return next.handle().pipe(
+      map(async (data) => {
+        const result = _.merge(data, additionalResponseData);
+        if (result.token) {
+          await this.authService.blockToken(token);
+        }
+        return result;
+      }),
+    );
   }
 }

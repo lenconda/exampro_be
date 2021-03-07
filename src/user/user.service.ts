@@ -98,10 +98,10 @@ export class UserService {
   }
 
   async updateUserProfile(email: string, data: Partial<User>) {
-    return await this.userRepository.update(
-      { email },
-      _.pick(data, ['avatar', 'name']),
-    );
+    return await this.userRepository.save({
+      email,
+      ..._.pick(data, ['avatar', 'name']),
+    });
   }
 
   async blockUser(email: string, type: string, days: number) {

@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from './user.decorator';
 import { User } from './user.entity';
@@ -10,8 +18,16 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/profile')
-  async profile(@CurrentUser() user: Record<string, any>) {
+  async getProfile(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Patch('/profile')
+  async updateProfile(
+    @CurrentUser() user: User,
+    @Body() updates: Partial<User> = {},
+  ) {
+    return await this.userService.updateUserProfile(user.email, updates);
   }
 
   @Post('/change_email')

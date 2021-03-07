@@ -11,6 +11,7 @@ import md5 from 'md5';
 import {
   ERR_ACCOUNT_NOT_FOUND,
   ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED,
+  ERR_ACCOUNT_STATUS_INVALID,
   ERR_ACTIVE_CODE_EXPIRED,
   ERR_ACTIVE_CODE_INVALID,
   ERR_AUTHENTICATION_FAILED,
@@ -238,9 +239,10 @@ export class AuthService {
     await this.userRepository.save({
       ...userInfo,
       code,
+      active: false,
       activeExpire: new Date(Date.now() + activeCodeExpiration),
     });
-    return {};
+    return { message: 'OK' };
   }
 
   /**
@@ -251,18 +253,25 @@ export class AuthService {
    */
   async resetPassword(email: string, code: string, password: string) {
     const userInfo = await this.userRepository.findOne({
-      email,
-      code,
+      where: { email },
+      select: ['code', 'active', 'email'],
     });
     if (!userInfo) {
-      throw new ForbiddenException();
+      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
-    const newUserInfo: User = {
-      ...userInfo,
+    if (userInfo.active) {
+      throw new ForbiddenException(ERR_ACCOUNT_STATUS_INVALID);
+    }
+    if (userInfo.code !== code) {
+      throw new ForbiddenException(ERR_ACTIVE_CODE_INVALID);
+    }
+    await this.userRepository.save({
+      email: userInfo.email,
       password: md5(password),
-      code: '',
-    };
-    await this.userRepository.save(newUserInfo);
+      code: null,
+      active: true,
+      activeExpire: null,
+    });
     return {
       token: this.sign(email),
     };
