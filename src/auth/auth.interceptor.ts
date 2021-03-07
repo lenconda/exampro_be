@@ -21,11 +21,15 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
     next: CallHandler,
   ): Promise<Observable<Response>> {
     const request = context.switchToHttp().getRequest();
-    const pathname = request.path;
+    const pathname = request.path as string;
     const token = ((request?.headers?.authorization as string) || '').slice(7);
-    const isTokenBlocked = await this.authService.checkToken(token);
+    const user = request?.user || {};
+    const email = user?.email || '';
 
-    if (isTokenBlocked) {
+    await this.authService.checkUserBanStatus(email);
+
+    const isTokenBlocked = await this.authService.checkToken(token);
+    if (!pathname.startsWith('/api/auth') && isTokenBlocked) {
       throw new UnauthorizedException();
     }
 
@@ -36,11 +40,6 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
       await this.authService.blockToken(token);
       return next.handle();
     }
-
-    const user = request?.user || {};
-    const email = user?.email || '';
-
-    await this.authService.checkUserBanStatus(email);
 
     const additionalResponseData = {} as Record<string, any>;
 
