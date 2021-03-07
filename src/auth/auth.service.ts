@@ -26,6 +26,7 @@ import { ConfigService } from 'src/config/config.service';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
 import { UserService } from 'src/user/user.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly mailerService: MailerService,
+    private readonly mailService: MailService,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
     @InjectRepository(Role)
@@ -163,31 +165,18 @@ export class AuthService {
     const { activeCodeExpiration } = this.configService.get('security') as {
       activeCodeExpiration: number;
     };
-    const { name, hostname } = this.configService.get();
+    const { hostname } = this.configService.get();
     const code = generateActiveCode();
+    const link = `${hostname}/user/active?m=${Buffer.from(email).toString(
+      'base64',
+    )}&c=${code}`;
+    await this.mailService.sendRegisterMail([email], link);
     const user = await this.userService.createUser(
       email,
       password,
       code,
       activeCodeExpiration,
     );
-    await this.mailerService.sendMail({
-      to: email,
-      from: 'no-reply@lenconda.top',
-      subject: `[${name}] 验证你的邮箱地址`,
-      template: 'mail',
-      context: {
-        appName: name,
-        mainContent: `在不久前，这个邮箱被用于注册 ${name} 服务。但是，到目前为止，我们仍无法信任这个邮箱。因此，我们需要你点击下面的链接完成邮箱的验证。此链接仅在 ${Math.floor(
-          activeCodeExpiration / 1000 / 60,
-        )} 分钟内有效，请及时验证：`,
-        linkHref: `${hostname}/user/active?m=${Buffer.from(user.email).toString(
-          'base64',
-        )}&c=${user.code}`,
-        linkContent: '验证邮箱地址',
-        placeholder: '',
-      },
-    });
     const role = await this.roleRepository.findOne({ id: 'user/normal' });
     const userRole = this.userRoleRepository.create({ user, role });
     await this.userRoleRepository.save(userRole);

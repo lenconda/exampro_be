@@ -20,6 +20,7 @@ import { ConfigService } from './config/config.service';
 import { ConfigModule } from './config/config.module';
 import { MenuModule } from './menu/menu.module';
 import { AdminModule } from './admin/admin.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { AdminModule } from './admin/admin.module';
     NotificationModule,
     MenuModule,
     AdminModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

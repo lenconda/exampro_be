@@ -98,6 +98,13 @@ export class UserService {
     };
   }
 
+  async updateUserProfile(email: string, data: Partial<User>) {
+    return await this.userRepository.update(
+      { email },
+      _.pick(data, ['avatar', 'name']),
+    );
+  }
+
   private async getUserBanStatus(email: string) {
     const key = `ban:user:${email}`;
     const banStatus = await this.redis.get(key);
