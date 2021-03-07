@@ -59,9 +59,6 @@ export class User {
   )
   userNotifications: UserNotification[];
 
-  @OneToMany(() => UserRole, (userRole) => userRole.user, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
 }

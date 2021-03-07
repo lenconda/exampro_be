@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from './user.entity';
 import md5 from 'md5';
 import { Role } from 'src/role/role.entity';
@@ -13,11 +13,15 @@ import { queryWithPagination } from 'src/utils/pagination';
 import _ from 'lodash';
 import {
   ERR_ACCOUNT_NOT_FOUND,
-  ERR_USER_BANNED,
+  ERR_EMAIL_DUPLICATED,
   ERR_USER_INACTIVE,
 } from 'src/constants';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
+import { generateActiveCode } from 'src/utils/generators';
+import { MailService } from 'src/mail/mail.service';
+import { ConfigService } from 'src/config/config.service';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class UserService {
@@ -29,23 +33,14 @@ export class UserService {
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
     private readonly redisService: RedisService,
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
   ) {
     this.redis = redisService.getClient();
   }
 
   private redis: Redis;
-
-  async createUser(email: string, password: string, code: string, exp: number) {
-    const user = this.userRepository.create({
-      email,
-      password: md5(password),
-      avatar: '/assets/images/default_avatar.jpg',
-      code,
-      activeExpire: new Date(Date.now() + exp),
-    });
-    await this.userRepository.insert(user);
-    return user;
-  }
 
   async createAdminUser(email: string, password: string, roleIds: string[]) {
     const adminUser = this.userRepository.create({
@@ -84,6 +79,10 @@ export class UserService {
       relations: ['userRoles', 'userRoles.role'],
     });
 
+    if (!userInfo) {
+      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
+    }
+
     if (!userInfo.active) {
       throw new ForbiddenException(ERR_USER_INACTIVE);
     }
@@ -105,23 +104,15 @@ export class UserService {
     );
   }
 
-  private async getUserBanStatus(email: string) {
-    const key = `ban:user:${email}`;
-    const banStatus = await this.redis.get(key);
-    if (!banStatus) {
-      return;
-    }
-    const ttl = await this.redis.ttl(key);
-    return { banStatus, ttl };
-  }
-
   async blockUser(email: string, type: string, days: number) {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
     const key = `ban:user:${email}`;
-    const userBlockRecord = (await this.getUserBanStatus(email)) || {
+    const userBlockRecord = (await this.authService.getUserBanStatus(
+      email,
+    )) || {
       ttl: 0,
     };
     const { ttl } = userBlockRecord;
@@ -142,16 +133,48 @@ export class UserService {
     return user;
   }
 
-  async checkUserBanStatus(email: string) {
-    const userBlockRecord = await this.getUserBanStatus(email);
+  async changeEmail(email: string, newEmail: string) {
+    if (await this.userRepository.findOne({ email: newEmail })) {
+      throw new ForbiddenException(ERR_EMAIL_DUPLICATED);
+    }
+    const { hostname } = this.configService.get();
+    const code = generateActiveCode();
+    const link = `${hostname}/user/reset?m=${Buffer.from(email).toString(
+      'base64',
+    )}&c=${code}`;
+    const { activeCodeExpiration } = this.configService.get('security');
+    await this.userRepository.update(
+      { email },
+      {
+        email: newEmail,
+        active: false,
+        code,
+        activeExpire: new Date(Date.now() + activeCodeExpiration),
+      },
+    );
+    await this.mailService.sendChangeEmailMail([newEmail], link);
+    return {
+      token: this.authService.sign(newEmail),
+    };
+  }
 
-    if (!userBlockRecord) {
-      return;
+  async destroy(email: string) {
+    const userInfo = await this.userRepository.findOne({
+      where: { email },
+      relations: ['userRoles'],
+    });
+
+    if (!userInfo) {
+      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
 
-    const { banStatus, ttl } = userBlockRecord;
+    await this.userRepository.softDelete({ email });
+    await this.userRoleRepository.softDelete({
+      id: In(userInfo.userRoles.map((role) => role.id)),
+    });
 
-    const code = banStatus.split('\n').join(':');
-    throw new ForbiddenException(`${ERR_USER_BANNED}::${code}::${ttl}`);
+    return {
+      message: 'OK',
+    };
   }
 }

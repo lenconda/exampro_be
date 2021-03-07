@@ -30,7 +30,10 @@ export class Notification {
   @Column({ default: true, select: false })
   broadcast: boolean;
 
-  @ManyToOne(() => User, (user) => user.sendedNotifications)
+  @ManyToOne(() => User, (user) => user.sendedNotifications, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'sender_email' })
   sender: User;
 

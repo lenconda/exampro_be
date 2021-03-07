@@ -28,13 +28,20 @@ export class UserNotification {
   @Column({ default: false })
   checked: boolean;
 
-  @ManyToOne(() => User, (user) => user.userNotifications)
+  @ManyToOne(() => User, (user) => user.userNotifications, {
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_email' })
   user: User;
 
   @ManyToOne(
     () => Notification,
     (notification) => notification.userNotifications,
+    {
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
   )
   @JoinColumn({ name: 'notification_id' })
   notification: Notification;

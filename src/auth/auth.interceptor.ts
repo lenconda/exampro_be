@@ -9,16 +9,12 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import _ from 'lodash';
-import { UserService } from 'src/user/user.service';
 
 export type Response = Record<string, any>;
 
 @Injectable()
 export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   async intercept(
     context: ExecutionContext,
@@ -44,7 +40,7 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
     const user = request?.user || {};
     const email = user?.email || '';
 
-    await this.userService.checkUserBanStatus(email);
+    await this.authService.checkUserBanStatus(email);
 
     if (token && email) {
       const payload = this.authService.decode(token);
@@ -58,9 +54,15 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
       if (expireTimestamp - Date.now() < 60000) {
         additionalResponseData.token = this.authService.sign(email);
       }
-      return next
-        .handle()
-        .pipe(map((data) => _.merge(data, additionalResponseData)));
+      return next.handle().pipe(
+        map(async (data) => {
+          const result = _.merge(data, additionalResponseData);
+          if (result.token) {
+            await this.authService.blockToken(token);
+          }
+          return result;
+        }),
+      );
     } else {
       return next.handle();
     }

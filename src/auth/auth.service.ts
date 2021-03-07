@@ -8,7 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import md5 from 'md5';
-import { MailerService } from '@nestjs-modules/mailer';
 import {
   ERR_ACCOUNT_NOT_FOUND,
   ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED,
@@ -17,6 +16,7 @@ import {
   ERR_AUTHENTICATION_FAILED,
   ERR_BODY_EMAIL_REQUIRED,
   ERR_BODY_PASSWORD_REQUIRED,
+  ERR_USER_BANNED,
   ERR_USER_INACTIVE,
 } from 'src/constants';
 import { UserRole } from 'src/role/user_role.entity';
@@ -25,7 +25,6 @@ import { generateActiveCode } from 'src/utils/generators';
 import { ConfigService } from 'src/config/config.service';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
-import { UserService } from 'src/user/user.service';
 import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
@@ -34,7 +33,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly mailerService: MailerService,
     private readonly mailService: MailService,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
@@ -42,12 +40,34 @@ export class AuthService {
     private readonly roleRepository: Repository<Role>,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    private readonly userService: UserService,
   ) {
     this.redis = redisService.getClient();
   }
 
   private redis: Redis;
+
+  async getUserBanStatus(email: string) {
+    const key = `ban:user:${email}`;
+    const banStatus = await this.redis.get(key);
+    if (!banStatus) {
+      return;
+    }
+    const ttl = await this.redis.ttl(key);
+    return { banStatus, ttl };
+  }
+
+  async checkUserBanStatus(email: string) {
+    const userBlockRecord = await this.getUserBanStatus(email);
+
+    if (!userBlockRecord) {
+      return;
+    }
+
+    const { banStatus, ttl } = userBlockRecord;
+
+    const code = banStatus.split('\n').join(':');
+    throw new ForbiddenException(`${ERR_USER_BANNED}::${code}::${ttl}`);
+  }
 
   /**
    * validate user
@@ -55,7 +75,7 @@ export class AuthService {
    * @param password password
    */
   async validateUser(email: string, password: string) {
-    await this.userService.checkUserBanStatus(email);
+    await this.checkUserBanStatus(email);
 
     const user = await this.userRepository.findOne({
       email,
@@ -124,7 +144,7 @@ export class AuthService {
       { code: null, active: true, activeExpire: null },
     );
     return {
-      token: this.sign(email),
+      message: 'OK',
     };
   }
 
@@ -150,6 +170,18 @@ export class AuthService {
     return { redirect };
   }
 
+  async createUser(email: string, password: string, code: string, exp: number) {
+    const user = this.userRepository.create({
+      email,
+      password: md5(password),
+      avatar: '/assets/images/default_avatar.jpg',
+      code,
+      activeExpire: new Date(Date.now() + exp),
+    });
+    await this.userRepository.insert(user);
+    return user;
+  }
+
   /**
    * register
    * @param email email
@@ -171,7 +203,7 @@ export class AuthService {
       'base64',
     )}&c=${code}`;
     await this.mailService.sendRegisterMail([email], link);
-    const user = await this.userService.createUser(
+    const user = await this.createUser(
       email,
       password,
       code,
@@ -194,28 +226,15 @@ export class AuthService {
     if (!userInfo) {
       return {};
     }
-    const { name, hostname } = this.configService.get();
+    const { hostname } = this.configService.get();
     const { activeCodeExpiration } = this.configService.get('security') as {
       activeCodeExpiration: number;
     };
     const code = generateActiveCode();
-    await this.mailerService.sendMail({
-      to: email,
-      from: 'no-reply@lenconda.top',
-      subject: `[${name}]修改你的账户密码`,
-      template: 'mail',
-      context: {
-        appName: name,
-        mainContent: `在不久前，这个邮箱被绑定的 ${name} 账户发起忘记密码操作。因此，我们需要你点击下面的链接完成账户密码的重置。此链接仅在 ${Math.floor(
-          activeCodeExpiration / 1000 / 60,
-        )} 分钟内有效，请及时验证：`,
-        linkHref: `${hostname}/user/reset?m=${Buffer.from(email).toString(
-          'base64',
-        )}&c=${code}`,
-        linkContent: '重置账户密码',
-        placeholder: '',
-      },
-    });
+    const link = `${hostname}/user/reset?m=${Buffer.from(email).toString(
+      'base64',
+    )}&c=${code}`;
+    await this.mailService.sendResetPasswordMail([email], link);
     await this.userRepository.save({
       ...userInfo,
       code,
