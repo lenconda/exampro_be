@@ -142,4 +142,16 @@ export class AdminController {
   async updateRole(@Param('id') id: string, @Body() updates = {}) {
     return await this.roleService.updateRole(id, updates);
   }
+
+  @Delete('/role/:id')
+  @Role('user/admin/system', 'user/admin/role')
+  async deleteRole(@Param('id') id: string) {
+    return await this.roleService.deleteRoles([id]);
+  }
+
+  @Delete('/role')
+  @Role('user/admin/system', 'user/admin/role')
+  async deleteRoles(@Body('id') ids: string[] = []) {
+    return await this.roleService.deleteRoles(ids);
+  }
 }

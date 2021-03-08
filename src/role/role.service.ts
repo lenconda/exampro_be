@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role } from './role.entity';
 import _ from 'lodash';
-import { ERR_ROLE_ID_DUPLICATED } from 'src/constants';
+import { ERR_ROLE_ID_DUPLICATED, ERR_ROLE_NOT_FOUND } from 'src/constants';
 
 export interface RoleTreeItem {
   id: string;
@@ -21,6 +21,9 @@ export class RoleService {
   ) {}
 
   async createRole(id: string, description?: string) {
+    if (await this.roleRepository.findOne({ id })) {
+      throw new BadRequestException(ERR_ROLE_NOT_FOUND);
+    }
     return await this.roleRepository.save({ id, description });
   }
 
@@ -66,5 +69,11 @@ export class RoleService {
     }
     await this.roleRepository.update({ id }, updates);
     return;
+  }
+
+  async deleteRoles(ids: string[]) {
+    await this.roleRepository.delete({
+      id: In(ids),
+    });
   }
 }
