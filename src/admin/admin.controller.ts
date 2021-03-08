@@ -34,7 +34,7 @@ export class AdminController {
   }
 
   @Get('/user')
-  @Role('user/admin/system', 'user/admin/user')
+  @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async getUserList(
     @Query('last_cursor') lastCursor = '',
     @Query('size') size = -1,
@@ -50,7 +50,7 @@ export class AdminController {
   }
 
   @Put('/user/:email/block')
-  @Role('user/admin/system', 'user/admin/user')
+  @Role('user/admin/system', 'user/admin/user', 'user/admin/report')
   async blockUser(
     @Param('email') email: string,
     @Body('type') type: string,
@@ -60,13 +60,13 @@ export class AdminController {
   }
 
   @Delete('/user/:email/block')
-  @Role('user/admin/system', 'user/admin/user')
+  @Role('user/admin/system', 'user/admin/user', 'user/admin/report')
   async unblockUser(@Param('email') email: string) {
     return await this.userService.unblockUser(email);
   }
 
   @Get('/menu')
-  @Role('user/admin/system', 'user/admin/menu')
+  @Role('user/admin/system', 'user/admin/layout', 'user/admin/role')
   async queryMenu(
     @Query('last_cursor') lastCursor = 0,
     @Query('size') size = -1,
@@ -77,7 +77,7 @@ export class AdminController {
   }
 
   @Post('/menu')
-  @Role('user/admin/system', 'user/admin/menu')
+  @Role('user/admin/system', 'user/admin/layout')
   async createMenuItem(
     @Body('title') title: string,
     @Body('pathname') pathname: string,
