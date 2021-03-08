@@ -14,6 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { MenuService } from 'src/menu/menu.service';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
+import { RoleService } from 'src/role/role.service';
 import { UserService } from 'src/user/user.service';
 
 @Controller('/api/admin')
@@ -22,6 +23,7 @@ export class AdminController {
   constructor(
     private readonly userService: UserService,
     private readonly menuService: MenuService,
+    private readonly roleService: RoleService,
   ) {}
 
   @Post()
@@ -114,5 +116,24 @@ export class AdminController {
   @Role('user/admin/system', 'user/admin/layout')
   async deleteOneMenu(@Param('id') id: string) {
     return await this.menuService.deleteMenus([parseInt(id, 10)]);
+  }
+
+  @Post('/role')
+  @Role('user/admin/system', 'user/admin/role')
+  async createRole(
+    @Body('id') id: string,
+    @Body('description') description: string = null,
+  ) {
+    return await this.roleService.createRole(id, description);
+  }
+
+  @Get('/role')
+  @Role('user/admin/system', 'user/admin/role')
+  async getRoles(@Query('flatten') flatten = false) {
+    if (flatten) {
+      return await this.roleService.getFlattenedRoles();
+    } else {
+      return await this.roleService.getTreedRoles();
+    }
   }
 }
