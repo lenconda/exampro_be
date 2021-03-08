@@ -136,4 +136,10 @@ export class AdminController {
       return await this.roleService.getTreedRoles();
     }
   }
+
+  @Patch('/role/:id')
+  @Role('user/admin/system', 'user/admin/role')
+  async updateRole(@Param('id') id: string, @Body() updates = {}) {
+    return await this.roleService.updateRole(id, updates);
+  }
 }

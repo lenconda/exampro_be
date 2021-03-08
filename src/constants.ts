@@ -40,6 +40,9 @@ export const ERR_MENU_NOT_FOUND = 'ERR_MENU_NOT_FOUND';
 // 无法指定父级目录为自身
 export const ERR_MENU_PARENT_CIRCLED = 'ERR_MENU_PARENT_CIRCLED';
 
+// 角色 ID 被占用
+export const ERR_ROLE_ID_DUPLICATED = 'ERR_ROLE_ID_DUPLICATED';
+
 // =================== 封禁状态 ===================
 
 /**

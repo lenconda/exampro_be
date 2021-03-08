@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from './role.entity';
 import _ from 'lodash';
+import { ERR_ROLE_ID_DUPLICATED } from 'src/constants';
 
 export interface RoleTreeItem {
   id: string;
@@ -56,5 +57,14 @@ export class RoleService {
       return result || [];
     };
     return traverse(roleObject);
+  }
+
+  async updateRole(id: string, data: Partial<Role>) {
+    const updates = _.pick(data, ['description', 'id']);
+    if (updates.id && (await this.roleRepository.findOne({ id: updates.id }))) {
+      throw new BadRequestException(ERR_ROLE_ID_DUPLICATED);
+    }
+    await this.roleRepository.update({ id }, updates);
+    return;
   }
 }
