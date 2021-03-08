@@ -28,7 +28,7 @@ export class Menu {
   @Column({ default: true })
   show: boolean;
 
-  @OneToMany(() => Menu, (menu) => menu.id, {
+  @OneToMany(() => Menu, (menu) => menu.parentMenu, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })

@@ -82,7 +82,7 @@ export class AdminController {
     @Body('title') title: string,
     @Body('pathname') pathname: string,
     @Body('icon') icon: string,
-    @Body('parent') parent: string,
+    @Body('parent') parent: number,
     @Body('roles') roles: string[],
   ) {
     return await this.menuService.createMenuItem(

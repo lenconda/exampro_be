@@ -34,6 +34,9 @@ export const ERR_EMAIL_DUPLICATED = 'ERR_EMAIL_DUPLICATED';
 // 角色不存在
 export const ERR_ROLE_NOT_FOUND = 'ERR_ROLE_NOT_FOUND';
 
+// 菜单项不存在
+export const ERR_MENU_NOT_FOUND = 'ERR_MENU_NOT_FOUND';
+
 // =================== 封禁状态 ===================
 
 /**

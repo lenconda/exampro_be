@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ERR_ROLE_NOT_FOUND } from 'src/constants';
+import { ERR_MENU_NOT_FOUND, ERR_ROLE_NOT_FOUND } from 'src/constants';
 import { MenuRole } from 'src/role/menu_role.entity';
 import { Role } from 'src/role/role.entity';
 import { checkValueMatchPatterns } from 'src/utils/checkers';
 import { queryWithPagination } from 'src/utils/pagination';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Menu } from './menu.entity';
+import _ from 'lodash';
 
 @Injectable()
 export class MenuService {
@@ -65,17 +66,25 @@ export class MenuService {
     title: string,
     pathname: string,
     icon = '',
-    parentMenuPathname = '',
+    parentId,
     roleIds: string[] = [],
   ) {
-    const parent = await this.menuRepository.findOne({
-      pathname: parentMenuPathname,
-    });
+    let parentMenu = null;
+
+    if (parentId) {
+      parentMenu = await this.menuRepository.findOne({
+        id: parentId,
+      });
+      if (!parentMenu) {
+        throw new NotFoundException(ERR_MENU_NOT_FOUND);
+      }
+    }
+
     const menuItem = this.menuRepository.create({
       title,
       pathname,
       icon,
-      parentMenu: parent || null,
+      parentMenu,
     });
     await this.menuRepository.save(menuItem);
     const roles = (await this.roleRepository.find()).filter((role) =>
@@ -89,5 +98,21 @@ export class MenuService {
     );
     await this.menuRoleRepository.save(menuRoles);
     return menuItem;
+  }
+
+  async getMenu(roles: Partial<Role>[]) {
+    const items = await this.menuRoleRepository.find({
+      where: {
+        role: {
+          id: In(roles.map((role) => role.id)),
+        },
+      },
+      relations: ['menu', 'menu.parentMenu', 'menu.children'],
+    });
+    return items
+      .filter((item) => !item.menu.parentMenu)
+      .map((item) => {
+        return _.omit(item.menu, ['parentMenu']);
+      });
   }
 }
