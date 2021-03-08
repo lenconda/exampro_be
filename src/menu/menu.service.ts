@@ -155,5 +155,6 @@ export class MenuService {
       },
     });
     await this.menuRepository.delete(menus.map((menu) => menu.id));
+    return;
   }
 }
