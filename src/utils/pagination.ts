@@ -1,31 +1,34 @@
 import { FindManyOptions, LessThan, MoreThan, Repository } from 'typeorm';
 import _ from 'lodash';
 
-export interface QueryPaginationOptions {
+export interface QueryPaginationOptions<K> {
   cursorColumn?: string;
-  query?: FindManyOptions;
+  query?: FindManyOptions<K>;
 }
 
-export const queryWithPagination = async <T>(
+export const queryWithPagination = async <T, K>(
   repository: Repository<any>,
   lastCursor: T,
+  cursorOrder: 'ASC' | 'DESC',
   size: number,
-  options: QueryPaginationOptions = {},
-) => {
+  options: QueryPaginationOptions<K> = {},
+): Promise<{ items: K[]; total?: number }> => {
   const { cursorColumn = 'id', query = {} } = options;
-  const cursorOrder = _.get(query, `order.${cursorColumn}`) || 'ASC';
   if (size === -1) {
     return {
       items: await repository.find(query),
     };
   }
-  const countQuery = {
-    where: {
-      [cursorColumn]:
-        cursorOrder === 'ASC' ? MoreThan(lastCursor) : LessThan(lastCursor),
-    },
-    ...query,
-  } as FindManyOptions;
+
+  const countQuery = _.merge(
+    query,
+    _.set(
+      {},
+      `where.${cursorColumn}`,
+      cursorOrder === 'ASC' ? MoreThan(lastCursor) : LessThan(lastCursor),
+    ),
+  );
+
   const itemsQuery = {
     ...countQuery,
     take: size,

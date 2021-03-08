@@ -28,7 +28,11 @@ export const ERR_USER_INACTIVE = 'ERR_USER_INACTIVE';
 // 用户被封禁
 export const ERR_USER_BANNED = 'ERR_USER_BANNED';
 
+// 用户邮箱已占用
 export const ERR_EMAIL_DUPLICATED = 'ERR_EMAIL_DUPLICATED';
+
+// 角色不存在
+export const ERR_ROLE_NOT_FOUND = 'ERR_ROLE_NOT_FOUND';
 
 // =================== 封禁状态 ===================
 

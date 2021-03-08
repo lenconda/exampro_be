@@ -25,6 +25,9 @@ export class Menu {
   @Column({ unique: true })
   pathname: string;
 
+  @Column({ default: true })
+  show: boolean;
+
   @OneToMany(() => Menu, (menu) => menu.id, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',

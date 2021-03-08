@@ -63,14 +63,20 @@ export class UserService {
   }
 
   async getUserList<T>(lastCursor: T, size = -1, order = 'asc') {
-    return await queryWithPagination<T>(this.userRepository, lastCursor, size, {
-      cursorColumn: 'email',
-      query: {
-        order: {
-          email: order.toUpperCase() as 'ASC' | 'DESC',
+    return await queryWithPagination<T, User>(
+      this.userRepository,
+      lastCursor,
+      'ASC',
+      size,
+      {
+        cursorColumn: 'email',
+        query: {
+          order: {
+            email: order.toUpperCase() as 'ASC' | 'DESC',
+          },
         },
       },
-    });
+    );
   }
 
   async getUserProfile(email: string) {
