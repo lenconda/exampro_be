@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -92,5 +93,26 @@ export class AdminController {
       parent,
       roles,
     );
+  }
+
+  @Patch('/menu/:id')
+  @Role('user/admin/system', 'user/admin/layout')
+  async updateMenu(
+    @Body() updates: Record<string, any>,
+    @Param('id') id: string,
+  ) {
+    return await this.menuService.updateMenu(parseInt(id, 10), updates);
+  }
+
+  @Delete('/menu')
+  @Role('user/admin/system', 'user/admin/layout')
+  async deleteMenus(@Body('id') ids: number[]) {
+    return await this.menuService.deleteMenus(ids);
+  }
+
+  @Delete('/menu/:id')
+  @Role('user/admin/system', 'user/admin/layout')
+  async deleteOneMenu(@Param('id') id: string) {
+    return await this.menuService.deleteMenus([parseInt(id, 10)]);
   }
 }

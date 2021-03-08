@@ -1,6 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ERR_MENU_NOT_FOUND, ERR_ROLE_NOT_FOUND } from 'src/constants';
+import {
+  ERR_MENU_NOT_FOUND,
+  ERR_MENU_PARENT_CIRCLED,
+  ERR_ROLE_NOT_FOUND,
+} from 'src/constants';
 import { MenuRole } from 'src/role/menu_role.entity';
 import { Role } from 'src/role/role.entity';
 import { checkValueMatchPatterns } from 'src/utils/checkers';
@@ -114,5 +122,38 @@ export class MenuService {
       .map((item) => {
         return _.omit(item.menu, ['parentMenu']);
       });
+  }
+
+  async updateMenu(id: number, updates: Record<string, any>) {
+    const parentId = updates.parent;
+    if (parentId === id) {
+      throw new BadRequestException(ERR_MENU_PARENT_CIRCLED);
+    }
+    const parentUpdates: Partial<Menu> = {};
+    if (parentId) {
+      const parentMenu = await this.menuRepository.findOne({ id: parentId });
+      if (!parentMenu) {
+        throw new NotFoundException(ERR_MENU_NOT_FOUND);
+      }
+      parentUpdates.parentMenu = parentMenu;
+    }
+    await this.menuRepository.update(
+      { id },
+      _.merge(
+        _.pick(updates, ['title', 'icon', 'pathname', 'show']),
+        parentUpdates,
+      ),
+    );
+
+    return;
+  }
+
+  async deleteMenus(ids: number[]) {
+    const menus = await this.menuRepository.find({
+      where: {
+        id: In(ids),
+      },
+    });
+    await this.menuRepository.delete(menus.map((menu) => menu.id));
   }
 }

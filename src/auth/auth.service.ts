@@ -144,9 +144,7 @@ export class AuthService {
       { email },
       { code: null, active: true, activeExpire: null },
     );
-    return {
-      message: 'OK',
-    };
+    return;
   }
 
   /**
@@ -242,7 +240,7 @@ export class AuthService {
       active: false,
       activeExpire: new Date(Date.now() + activeCodeExpiration),
     });
-    return { message: 'OK' };
+    return;
   }
 
   /**

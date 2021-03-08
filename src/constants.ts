@@ -37,6 +37,9 @@ export const ERR_ROLE_NOT_FOUND = 'ERR_ROLE_NOT_FOUND';
 // 菜单项不存在
 export const ERR_MENU_NOT_FOUND = 'ERR_MENU_NOT_FOUND';
 
+// 无法指定父级目录为自身
+export const ERR_MENU_PARENT_CIRCLED = 'ERR_MENU_PARENT_CIRCLED';
+
 // =================== 封禁状态 ===================
 
 /**

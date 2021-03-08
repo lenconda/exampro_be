@@ -58,6 +58,9 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
 
     return next.handle().pipe(
       map(async (data) => {
+        if (!data) {
+          return { message: 'OK' };
+        }
         const result = _.merge(data, additionalResponseData);
         if (result.token) {
           await this.authService.blockToken(token);

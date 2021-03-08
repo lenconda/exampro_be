@@ -174,13 +174,8 @@ export class UserService {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
 
-    await this.userRepository.softDelete({ email });
-    await this.userRoleRepository.softDelete({
-      id: In(userInfo.userRoles.map((role) => role.id)),
-    });
+    await this.userRepository.delete({ email });
 
-    return {
-      message: 'OK',
-    };
+    return;
   }
 }
