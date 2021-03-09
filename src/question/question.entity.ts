@@ -35,7 +35,7 @@ export enum MultipleChoicesModes {
 @Entity({ name: 'questions' })
 export class Question {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   content: string;

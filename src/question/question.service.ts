@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
@@ -11,7 +12,7 @@ import {
   ERR_QUESTION_NOT_FOUND,
 } from 'src/constants';
 import { User } from 'src/user/user.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Question } from './question.entity';
 import { QuestionAnswer } from './question_answer.entity';
 import { QuestionCategory } from './question_category.entity';
@@ -42,7 +43,7 @@ export class QuestionService {
   ) {
     const categories = await this.questionCategoryRepository.find({
       where: {
-        id: categoryIds,
+        id: In(categoryIds),
       },
     });
     const question = this.questionRepository.create({
@@ -95,6 +96,55 @@ export class QuestionService {
     return { items: questionChoices };
   }
 
+  async updateQuestionChoice(
+    creator: User,
+    questionId: number,
+    choiceId: number,
+    updates: Record<string, any>,
+  ) {
+    const choice = await this.questionChoiceRepository.findOne({
+      where: {
+        id: choiceId,
+      },
+      relations: ['question', 'question.creator'],
+    });
+    if (!choice) {
+      throw new NotFoundException();
+    }
+    if (choice.question.creator.email !== creator.email) {
+      throw new ForbiddenException();
+    }
+    if (choice.question.id !== questionId) {
+      throw new ForbiddenException();
+    }
+    await this.questionChoiceRepository.update(
+      { id: choiceId },
+      _.pick(updates, ['order', 'content']),
+    );
+  }
+
+  async deleteQuestionChoices(
+    creator: User,
+    questionId: number,
+    choiceIds: number[],
+  ) {
+    const choices = await this.questionChoiceRepository.find({
+      where: {
+        id: In(choiceIds),
+        question: {
+          id: questionId,
+          creator: {
+            email: creator.email,
+          },
+        },
+      },
+      relations: ['question', 'question.creator'],
+    });
+    await this.questionChoiceRepository.delete(
+      choices.map((choice) => choice.id),
+    );
+  }
+
   async createQuestionAnswers(
     creator: User,
     questionId: number,
@@ -120,6 +170,69 @@ export class QuestionService {
     });
     await this.questionAnswerRepository.save(questionAnswers);
     return { items: questionAnswers };
+  }
+
+  async deleteQuestions(creator: User, questionIds: number[]) {
+    const questions = await this.questionRepository.find({
+      where: {
+        creator: {
+          email: creator.email,
+        },
+        id: In(questionIds),
+      },
+    });
+    await this.questionRepository.delete(
+      questions.map((question) => question.id),
+    );
+  }
+
+  async updateQuestionAnswer(
+    creator: User,
+    questionId: number,
+    answerId: number,
+    updates: Record<string, any>,
+  ) {
+    const answer = await this.questionAnswerRepository.findOne({
+      where: {
+        id: answerId,
+      },
+      relations: ['question', 'question.creator'],
+    });
+    if (!answer) {
+      throw new NotFoundException();
+    }
+    if (answer.question.creator.email !== creator.email) {
+      throw new ForbiddenException();
+    }
+    if (answer.question.id !== questionId) {
+      throw new ForbiddenException();
+    }
+    await this.questionAnswerRepository.update(
+      { id: answerId },
+      _.pick(updates, ['order', 'content']),
+    );
+  }
+
+  async deleteQuestionAnswers(
+    creator: User,
+    questionId: number,
+    answerIds: number[],
+  ) {
+    const answers = await this.questionAnswerRepository.find({
+      where: {
+        id: In(answerIds),
+        question: {
+          id: questionId,
+          creator: {
+            email: creator.email,
+          },
+        },
+      },
+      relations: ['question', 'question.creator'],
+    });
+    await this.questionAnswerRepository.delete(
+      answers.map((answer) => answer.id),
+    );
   }
 
   async createQuestionCategory(creator: User, name: string) {

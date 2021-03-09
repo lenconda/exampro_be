@@ -13,7 +13,7 @@ import { Question } from './question.entity';
 @Entity({ name: 'question_answers' })
 export class QuestionAnswer {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column()
   content: string;

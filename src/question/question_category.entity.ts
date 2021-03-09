@@ -16,7 +16,7 @@ import { QuestionQuestionCategory } from './question_question_category.entity';
 @Entity({ name: 'question_categories' })
 export class QuestionCategory {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
 
   @Column({ unique: true })
   name: string;
