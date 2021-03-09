@@ -137,6 +137,42 @@ export class AdminController {
     }
   }
 
+  @Post('/role/user')
+  @Role('user/admin/system', 'user/admin/role')
+  async grantUserRoles(
+    @Body('users') userEmails: string[] = [],
+    @Body('roles') roleIds: string[] = [],
+  ) {
+    return await this.roleService.grantUserRoles(userEmails, roleIds);
+  }
+
+  @Delete('/role/user')
+  @Role('user/admin/system', 'user/admin/role')
+  async revokeUserRoles(
+    @Body('users') userEmails: string[] = [],
+    @Body('roles') roleIds: string[] = [],
+  ) {
+    return await this.roleService.revokeUserRoles(userEmails, roleIds);
+  }
+
+  @Post('/role/menu')
+  @Role('user/admin/system', 'user/admin/role')
+  async grantMenuRoles(
+    @Body('menus') menuIds: number[] = [],
+    @Body('roles') roleIds: string[] = [],
+  ) {
+    return await this.roleService.grantMenuRoles(menuIds, roleIds);
+  }
+
+  @Delete('/role/menu')
+  @Role('user/admin/system', 'user/admin/role')
+  async revokeMenuRoles(
+    @Body('menus') menuIds: number[] = [],
+    @Body('roles') roleIds: string[] = [],
+  ) {
+    return await this.roleService.revokeMenuRoles(menuIds, roleIds);
+  }
+
   @Patch('/role/:id')
   @Role('user/admin/system', 'user/admin/role')
   async updateRole(@Param('id') id: string, @Body() updates = {}) {

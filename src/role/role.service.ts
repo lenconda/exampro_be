@@ -4,6 +4,10 @@ import { In, Repository } from 'typeorm';
 import { Role } from './role.entity';
 import _ from 'lodash';
 import { ERR_ROLE_ID_DUPLICATED, ERR_ROLE_NOT_FOUND } from 'src/constants';
+import { UserRole } from './user_role.entity';
+import { MenuRole } from './menu_role.entity';
+import { User } from 'src/user/user.entity';
+import { Menu } from 'src/menu/menu.entity';
 
 export interface RoleTreeItem {
   id: string;
@@ -18,6 +22,14 @@ export class RoleService {
   constructor(
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepository: Repository<UserRole>,
+    @InjectRepository(MenuRole)
+    private readonly menuRoleRepository: Repository<MenuRole>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Menu)
+    private readonly menuRepository: Repository<Menu>,
   ) {}
 
   async createRole(id: string, description?: string) {
@@ -75,5 +87,77 @@ export class RoleService {
     await this.roleRepository.delete({
       id: In(ids),
     });
+  }
+
+  async grantUserRoles(userEmails: string[], roleIds: string[]) {
+    const users = await this.userRepository.find({
+      where: userEmails.map((email) => ({ email })),
+    });
+    const roles = await this.roleRepository.find({
+      where: roleIds.map((id) => ({ id })),
+    });
+    const userRoles: UserRole[] = [];
+    for (const user of users) {
+      for (const role of roles) {
+        userRoles.push(this.userRoleRepository.create({ user, role }));
+      }
+    }
+    await this.userRoleRepository.save(userRoles);
+    return { items: userRoles };
+  }
+
+  async revokeUserRoles(userEmails: string[], roleIds: string[]) {
+    const deletes = [];
+    for (const email of userEmails) {
+      for (const id of roleIds) {
+        const userRole = await this.userRoleRepository.findOne({
+          where: {
+            user: { email },
+            role: { id },
+          },
+        });
+        if (userRole) {
+          deletes.push(userRole);
+        }
+      }
+    }
+    await this.userRoleRepository.delete(deletes);
+    return { items: deletes };
+  }
+
+  async grantMenuRoles(menuIds: number[], roleIds: string[]) {
+    const menus = await this.menuRepository.find({
+      where: menuIds.map((id) => ({ id })),
+    });
+    const roles = await this.roleRepository.find({
+      where: roleIds.map((id) => ({ id })),
+    });
+    const menuRoles: MenuRole[] = [];
+    for (const menu of menus) {
+      for (const role of roles) {
+        menuRoles.push(this.menuRoleRepository.create({ menu, role }));
+      }
+    }
+    await this.menuRoleRepository.save(menuRoles);
+    return { items: menuRoles };
+  }
+
+  async revokeMenuRoles(menuIds: number[], roleIds: string[]) {
+    const deletes = [];
+    for (const menuId of menuIds) {
+      for (const roleId of roleIds) {
+        const menuRole = await this.menuRoleRepository.findOne({
+          where: {
+            menu: { id: menuId },
+            role: { id: roleId },
+          },
+        });
+        if (menuRole) {
+          deletes.push(menuRole);
+        }
+      }
+    }
+    await this.menuRoleRepository.delete(deletes);
+    return { items: deletes };
   }
 }
