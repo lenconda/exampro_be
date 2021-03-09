@@ -47,7 +47,11 @@ export const ERR_ROLE_ID_DUPLICATED = 'ERR_ROLE_ID_DUPLICATED';
 export const ERR_QUESTION_MODIFICATION_PROHIBITED =
   'ERR_QUESTION_MODIFICATION_PROHIBITED';
 
+// 试题未找到
 export const ERR_QUESTION_NOT_FOUND = 'ERR_QUESTION_NOT_FOUND';
+
+// 试题类型不允许出现选项
+export const ERR_CHOICES_NOT_ALLOWED = 'ERR_CHOICES_NOT_ALLOWED';
 
 // =================== 封禁状态 ===================
 

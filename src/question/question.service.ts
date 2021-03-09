@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import {
+  ERR_CHOICES_NOT_ALLOWED,
   ERR_QUESTION_MODIFICATION_PROHIBITED,
   ERR_QUESTION_NOT_FOUND,
 } from 'src/constants';
@@ -78,10 +79,18 @@ export class QuestionService {
     if (creator.email !== question.creator.email) {
       throw new ForbiddenException(ERR_QUESTION_MODIFICATION_PROHIBITED);
     }
-    const questionChoices = choices.map((choice) => ({
-      question,
-      ..._.pick(choice, ['content', 'order']),
-    }));
+    if (
+      question.type !== 'multiple_choices' &&
+      question.type !== 'single_choice'
+    ) {
+      throw new BadRequestException(ERR_CHOICES_NOT_ALLOWED);
+    }
+    const questionChoices = choices.map((choice) => {
+      return this.questionChoiceRepository.create({
+        question,
+        ..._.pick(choice, ['content', 'order']),
+      });
+    });
     await this.questionChoiceRepository.save(questionChoices);
     return { items: questionChoices };
   }
@@ -103,10 +112,12 @@ export class QuestionService {
     if (creator.email !== question.creator.email) {
       throw new ForbiddenException(ERR_QUESTION_MODIFICATION_PROHIBITED);
     }
-    const questionAnswers = answers.map((answer) => ({
-      question,
-      ..._.pick(answer, ['content', 'order']),
-    }));
+    const questionAnswers = answers.map((answer) => {
+      return this.questionAnswerRepository.create({
+        question,
+        ..._.pick(answer, ['content', 'order']),
+      });
+    });
     await this.questionAnswerRepository.save(questionAnswers);
     return { items: questionAnswers };
   }
