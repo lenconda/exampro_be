@@ -10,6 +10,8 @@ import {
 } from 'typeorm';
 import { UserNotification } from 'src/notification/user_notification.entity';
 import { UserRole } from 'src/role/user_role.entity';
+import { Question } from 'src/question/question.entity';
+import { QuestionCategory } from 'src/question/question_category.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -43,22 +45,24 @@ export class User {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @OneToMany(() => Notification, (notification) => notification.sender, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @OneToMany(() => Notification, (notification) => notification.sender)
   sendedNotifications: Notification[];
 
   @OneToMany(
     () => UserNotification,
     (userNotification) => userNotification.user,
-    {
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    },
   )
   userNotifications: UserNotification[];
 
   @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
+
+  @OneToMany(() => Question, (question) => question.creator)
+  questions: Question[];
+
+  @OneToMany(
+    () => QuestionCategory,
+    (questionCategory) => questionCategory.creator,
+  )
+  questionCategories: QuestionCategory[];
 }

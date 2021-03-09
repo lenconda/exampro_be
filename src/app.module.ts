@@ -21,6 +21,7 @@ import { ConfigModule } from './config/config.module';
 import { MenuModule } from './menu/menu.module';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
+import { QuestionModule } from './question/question.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { MailModule } from './mail/mail.module';
     MenuModule,
     AdminModule,
     MailModule,
+    QuestionModule,
   ],
   controllers: [AppController],
   providers: [

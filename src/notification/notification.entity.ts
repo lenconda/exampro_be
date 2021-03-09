@@ -40,7 +40,6 @@ export class Notification {
   @OneToMany(
     () => UserNotification,
     (userNotifications) => userNotifications.notification,
-    { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
   )
   userNotifications: UserNotification[];
 }

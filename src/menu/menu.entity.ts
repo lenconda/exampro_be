@@ -28,10 +28,7 @@ export class Menu {
   @Column({ default: true })
   show: boolean;
 
-  @OneToMany(() => Menu, (menu) => menu.parentMenu, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @OneToMany(() => Menu, (menu) => menu.parentMenu)
   children: Menu[];
 
   @ManyToOne(() => Menu, (menu) => menu.children, {
@@ -41,10 +38,7 @@ export class Menu {
   @JoinColumn({ name: 'parent_id' })
   parentMenu: Menu;
 
-  @OneToMany(() => MenuRole, (menuRole) => menuRole.menu, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @OneToMany(() => MenuRole, (menuRole) => menuRole.menu)
   menuRoles: MenuRole[];
 
   @CreateDateColumn({ name: 'created_at' })

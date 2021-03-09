@@ -43,6 +43,12 @@ export const ERR_MENU_PARENT_CIRCLED = 'ERR_MENU_PARENT_CIRCLED';
 // 角色 ID 被占用
 export const ERR_ROLE_ID_DUPLICATED = 'ERR_ROLE_ID_DUPLICATED';
 
+// 无权限修改题目
+export const ERR_QUESTION_MODIFICATION_PROHIBITED =
+  'ERR_QUESTION_MODIFICATION_PROHIBITED';
+
+export const ERR_QUESTION_NOT_FOUND = 'ERR_QUESTION_NOT_FOUND';
+
 // =================== 封禁状态 ===================
 
 /**

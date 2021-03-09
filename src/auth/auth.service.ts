@@ -27,6 +27,7 @@ import { ConfigService } from 'src/config/config.service';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
 import { MailService } from 'src/mail/mail.service';
+import _ from 'lodash';
 
 @Injectable()
 export class AuthService {
@@ -105,7 +106,7 @@ export class AuthService {
 
   async blockToken(token: string) {
     const currentTimestamp = Date.now();
-    const { exp = currentTimestamp / 1000 } = this.decode(token);
+    const exp = _.get(this.decode(token), 'exp') || currentTimestamp / 1000;
     const expirationTimestamp = exp * 1000;
     if (expirationTimestamp <= currentTimestamp) {
       return;

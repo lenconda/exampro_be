@@ -27,15 +27,9 @@ export class Role {
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt: Date;
 
-  @OneToMany(() => UserRole, (userRole) => userRole.role, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @OneToMany(() => UserRole, (userRole) => userRole.role)
   userRoles: UserRole[];
 
-  @OneToMany(() => MenuRole, (menuRole) => menuRole.role, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @OneToMany(() => MenuRole, (menuRole) => menuRole.role)
   menuRoles: MenuRole[];
 }
