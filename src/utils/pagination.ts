@@ -8,7 +8,7 @@ export interface QueryPaginationOptions<K> {
 
 export const queryWithPagination = async <T, K>(
   repository: Repository<any>,
-  lastCursor: T,
+  lastCursor: T = null,
   cursorOrder: 'ASC' | 'DESC',
   size: number,
   options: QueryPaginationOptions<K> = {},
@@ -22,11 +22,13 @@ export const queryWithPagination = async <T, K>(
 
   const countQuery = _.merge(
     query,
-    _.set(
-      {},
-      `where.${cursorColumn}`,
-      cursorOrder === 'ASC' ? MoreThan(lastCursor) : LessThan(lastCursor),
-    ),
+    lastCursor
+      ? _.set(
+          {},
+          `where.${cursorColumn}`,
+          cursorOrder === 'ASC' ? MoreThan(lastCursor) : LessThan(lastCursor),
+        )
+      : {},
   );
 
   const itemsQuery = {

@@ -88,29 +88,19 @@ export class QuestionService {
     categoryIds: number[],
   ) {
     return queryWithPagination<number, QuestionQuestionCategory>(
-      this.questionQuestionCategoryRepository,
+      this.questionRepository,
       lastCursor,
       order.toUpperCase() as 'ASC' | 'DESC',
       size,
       {
-        cursorColumn: 'question.id',
-        query: {
-          where: {
-            question: {
-              creator: {
-                email: creator.email,
-              },
-            },
-            ...(categoryIds.length === 0
-              ? {}
-              : {
-                  category: {
-                    id: In(categoryIds),
-                  },
-                }),
-          },
-          relations: ['question', 'category'],
-        },
+        // query: {
+        //   where: {
+        //     creator: {
+        //       email: creator.email,
+        //     },
+        //   },
+        //   relations: ['creator'],
+        // },
       },
     );
   }
