@@ -33,6 +33,17 @@ export class QuestionController {
     );
   }
 
+  @Delete()
+  async deleteQuestions(
+    @CurrentUser() user,
+    @Body('questions') questionIds: string[],
+  ) {
+    return await this.questionService.deleteQuestions(
+      user,
+      questionIds.map((questionId) => parseInt(questionId)),
+    );
+  }
+
   @Post('/category')
   async createQuestionCategory(
     @CurrentUser() user,
@@ -54,19 +65,6 @@ export class QuestionController {
     );
   }
 
-  @Post('/:question/categories')
-  async createQuestionCategories(
-    @CurrentUser() user,
-    @Param('question') questionId: string,
-    @Body('categories') categoryIds: string[],
-  ) {
-    return await this.questionService.createQuestionCategories(
-      user,
-      [parseInt(questionId)],
-      categoryIds.map((categoryId) => parseInt(categoryId)),
-    );
-  }
-
   @Delete('/question_categories')
   async deleteQuestionsCategories(
     @CurrentUser() user,
@@ -76,6 +74,19 @@ export class QuestionController {
     return await this.questionService.deleteQuestionsCategories(
       user,
       questionIds.map((questionId) => parseInt(questionId)),
+      categoryIds.map((categoryId) => parseInt(categoryId)),
+    );
+  }
+
+  @Post('/:question/categories')
+  async createQuestionCategories(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+    @Body('categories') categoryIds: string[],
+  ) {
+    return await this.questionService.createQuestionCategories(
+      user,
+      [parseInt(questionId)],
       categoryIds.map((categoryId) => parseInt(categoryId)),
     );
   }
@@ -103,6 +114,19 @@ export class QuestionController {
       user,
       parseInt(questionId),
       choices,
+    );
+  }
+
+  @Delete('/:question/choices')
+  async deleteQuestionChoices(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+    @Body('choices') choiceIds: string[] = [],
+  ) {
+    return await this.questionService.deleteQuestionChoices(
+      user,
+      parseInt(questionId),
+      choiceIds.map((choiceId) => parseInt(choiceId)),
     );
   }
 
@@ -134,19 +158,6 @@ export class QuestionController {
     );
   }
 
-  @Delete('/:question/choices')
-  async deleteQuestionChoices(
-    @CurrentUser() user,
-    @Param('question') questionId: string,
-    @Body('choices') choiceIds: string[] = [],
-  ) {
-    return await this.questionService.deleteQuestionChoices(
-      user,
-      parseInt(questionId),
-      choiceIds.map((choiceId) => parseInt(choiceId)),
-    );
-  }
-
   @Post('/:question/answers')
   async createQuestionAnswers(
     @CurrentUser() user,
@@ -157,6 +168,19 @@ export class QuestionController {
       user,
       parseInt(questionId),
       answers,
+    );
+  }
+
+  @Delete('/:question/answers')
+  async deleteQuestionAnswers(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+    @Body('answers') answerIds: string[] = [],
+  ) {
+    return await this.questionService.deleteQuestionAnswers(
+      user,
+      parseInt(questionId),
+      answerIds.map((answerId) => parseInt(answerId)),
     );
   }
 
@@ -188,16 +212,26 @@ export class QuestionController {
     );
   }
 
-  @Delete('/:question/answers')
-  async deleteQuestionAnswers(
+  @Patch('/:question')
+  async updateQuestion(
     @CurrentUser() user,
     @Param('question') questionId: string,
-    @Body('answers') answerIds: string[] = [],
+    @Body() updates: Record<string, any>,
   ) {
-    return await this.questionService.deleteQuestionAnswers(
+    return await this.questionService.updateQuestion(
       user,
       parseInt(questionId),
-      answerIds.map((answerId) => parseInt(answerId)),
+      updates,
     );
+  }
+
+  @Delete('/:question')
+  async deleteQuestion(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+  ) {
+    return await this.questionService.deleteQuestions(user, [
+      parseInt(questionId),
+    ]);
   }
 }

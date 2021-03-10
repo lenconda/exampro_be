@@ -9,7 +9,6 @@ import _ from 'lodash';
 import {
   ERR_CHOICES_NOT_ALLOWED,
   ERR_QUESTION_MODIFICATION_PROHIBITED,
-  ERR_QUESTION_NOT_FOUND,
 } from 'src/constants';
 import { User } from 'src/user/user.entity';
 import { In, Repository } from 'typeorm';
@@ -61,6 +60,23 @@ export class QuestionService {
     });
     await this.questionQuestionCategoryRepository.save(questionCategories);
     return question;
+  }
+
+  async updateQuestion(
+    creator: User,
+    questionId: number,
+    updates: Record<string, any>,
+  ) {
+    await this.questionRepository.update(
+      {
+        id: questionId,
+        creator: {
+          email: creator.email,
+        },
+      },
+      _.pick(updates, ['content', 'type', 'mode']),
+    );
+    return;
   }
 
   async createCategory(creator: User, name: string) {
@@ -186,7 +202,7 @@ export class QuestionService {
       relations: ['creator'],
     });
     if (!question) {
-      throw new BadRequestException(ERR_QUESTION_NOT_FOUND);
+      throw new NotFoundException();
     }
     if (creator.email !== question.creator.email) {
       throw new ForbiddenException(ERR_QUESTION_MODIFICATION_PROHIBITED);
@@ -268,7 +284,7 @@ export class QuestionService {
       relations: ['creator'],
     });
     if (!question) {
-      throw new BadRequestException(ERR_QUESTION_NOT_FOUND);
+      throw new NotFoundException();
     }
     if (creator.email !== question.creator.email) {
       throw new ForbiddenException(ERR_QUESTION_MODIFICATION_PROHIBITED);
