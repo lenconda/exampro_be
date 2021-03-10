@@ -63,6 +63,117 @@ export class QuestionService {
     return question;
   }
 
+  async createCategory(creator: User, name: string) {
+    const existedCategory = await this.questionCategoryRepository.findOne({
+      where: {
+        creator: { email: creator.email },
+        name,
+      },
+    });
+    if (existedCategory) {
+      return existedCategory;
+    }
+    const category = this.questionCategoryRepository.create({
+      creator,
+      name,
+    });
+    await this.questionCategoryRepository.save(category);
+    return category;
+  }
+
+  async createQuestionCategories(
+    creator: User,
+    questionIds: number[],
+    categoryIds: number[],
+  ) {
+    const questions = await this.questionRepository.find({
+      where: {
+        id: In(questionIds),
+        creator: {
+          email: creator.email,
+        },
+      },
+      relations: ['creator'],
+    });
+    const categories = await this.questionCategoryRepository.find({
+      where: {
+        id: In(categoryIds),
+        creator: {
+          email: creator.email,
+        },
+      },
+      relations: ['creator'],
+    });
+    const existedQuestionCategories = await this.questionQuestionCategoryRepository.find(
+      {
+        where: {
+          question: {
+            id: In(questionIds),
+          },
+          category: {
+            id: In(categoryIds),
+          },
+        },
+        relations: ['question', 'category'],
+      },
+    );
+    const questionCategories: QuestionQuestionCategory[] = [];
+    for (const question of questions) {
+      for (const category of categories) {
+        if (
+          existedQuestionCategories.findIndex((questionCategory) => {
+            return (
+              questionCategory.category.id === category.id &&
+              questionCategory.question.id === question.id
+            );
+          }) === -1
+        ) {
+          questionCategories.push(
+            this.questionQuestionCategoryRepository.create({
+              question,
+              category,
+            }),
+          );
+        }
+      }
+    }
+    await this.questionQuestionCategoryRepository.save(questionCategories);
+  }
+
+  async deleteQuestionsCategories(
+    creator: User,
+    questionIds: number[],
+    categoryIds: number[],
+  ) {
+    const questionCategories = await this.questionQuestionCategoryRepository.find(
+      {
+        where: {
+          question: {
+            id: In(questionIds),
+            creator: {
+              email: creator.email,
+            },
+          },
+          category: {
+            id: In(categoryIds),
+            creator: {
+              email: creator.email,
+            },
+          },
+        },
+        relations: [
+          'question',
+          'category',
+          'question.creator',
+          'category.creator',
+        ],
+      },
+    );
+    await this.questionQuestionCategoryRepository.delete(
+      questionCategories.map((questionCategory) => questionCategory.id),
+    );
+  }
+
   async createQuestionChoices(
     creator: User,
     questionId: number,
@@ -233,23 +344,5 @@ export class QuestionService {
     await this.questionAnswerRepository.delete(
       answers.map((answer) => answer.id),
     );
-  }
-
-  async createQuestionCategory(creator: User, name: string) {
-    const existedCategory = await this.questionCategoryRepository.findOne({
-      where: {
-        creator: { email: creator.email },
-        name,
-      },
-    });
-    if (existedCategory) {
-      return existedCategory;
-    }
-    const category = this.questionCategoryRepository.create({
-      creator,
-      name,
-    });
-    await this.questionCategoryRepository.save(category);
-    return category;
   }
 }

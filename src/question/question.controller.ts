@@ -38,18 +38,70 @@ export class QuestionController {
     @CurrentUser() user,
     @Body('name') name: string,
   ) {
-    return await this.questionService.createQuestionCategory(user, name);
+    return await this.questionService.createCategory(user, name);
   }
 
-  @Post('/:id/choices')
+  @Post('/question_categories')
+  async createQuestionsCategories(
+    @CurrentUser() user,
+    @Body('questions') questionIds: string[],
+    @Body('categories') categoryIds: string[],
+  ) {
+    return await this.questionService.createQuestionCategories(
+      user,
+      questionIds.map((questionId) => parseInt(questionId)),
+      categoryIds.map((categoryId) => parseInt(categoryId)),
+    );
+  }
+
+  @Post('/:question/categories')
+  async createQuestionCategories(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+    @Body('categories') categoryIds: string[],
+  ) {
+    return await this.questionService.createQuestionCategories(
+      user,
+      [parseInt(questionId)],
+      categoryIds.map((categoryId) => parseInt(categoryId)),
+    );
+  }
+
+  @Delete('/question_categories')
+  async deleteQuestionsCategories(
+    @CurrentUser() user,
+    @Body('questions') questionIds: string[],
+    @Body('categories') categoryIds: string[],
+  ) {
+    return await this.questionService.deleteQuestionsCategories(
+      user,
+      questionIds.map((questionId) => parseInt(questionId)),
+      categoryIds.map((categoryId) => parseInt(categoryId)),
+    );
+  }
+
+  @Delete('/:question/categories')
+  async deleteQuestionCategories(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+    @Body('categories') categoryIds: string[],
+  ) {
+    return await this.questionService.deleteQuestionsCategories(
+      user,
+      [parseInt(questionId)],
+      categoryIds.map((categoryId) => parseInt(categoryId)),
+    );
+  }
+
+  @Post('/:question/choices')
   async createQuestionChoices(
     @CurrentUser() user,
-    @Param('id') id: string,
+    @Param('question') questionId: string,
     @Body('choices') choices: Record<string, any>[] = [],
   ) {
     return await this.questionService.createQuestionChoices(
       user,
-      parseInt(id),
+      parseInt(questionId),
       choices,
     );
   }
@@ -95,15 +147,15 @@ export class QuestionController {
     );
   }
 
-  @Post('/:id/answers')
+  @Post('/:question/answers')
   async createQuestionAnswers(
     @CurrentUser() user,
-    @Param('id') id: string,
+    @Param('question') questionId: string,
     @Body('answers') answers: Record<string, any>[] = [],
   ) {
     return await this.questionService.createQuestionAnswers(
       user,
-      parseInt(id),
+      parseInt(questionId),
       answers,
     );
   }
