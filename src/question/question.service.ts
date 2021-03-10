@@ -105,6 +105,7 @@ export class QuestionService {
                 categoryId: categoryIds,
               });
             },
+            relations: ['choices', 'answers'],
           }
         : {
             where: {
@@ -112,6 +113,7 @@ export class QuestionService {
                 email: creator.email,
               },
             },
+            relations: ['choices', 'answers'],
           };
     return queryWithPagination<number, Question>(
       this.questionRepository,
@@ -120,6 +122,18 @@ export class QuestionService {
       size,
       { query },
     );
+  }
+
+  async getQuestion(creator: User, id: number) {
+    return await this.questionRepository.findOne({
+      where: {
+        id,
+        creator: {
+          email: creator.email,
+        },
+      },
+      relations: ['answers', 'choices'],
+    });
   }
 
   async createCategory(creator: User, name: string) {

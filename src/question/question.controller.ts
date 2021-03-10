@@ -257,4 +257,12 @@ export class QuestionController {
       parseInt(questionId),
     ]);
   }
+
+  @Get('/:question')
+  async getQuestion(
+    @CurrentUser() user,
+    @Param('question') questionId: string,
+  ) {
+    return await this.questionService.getQuestion(user, parseInt(questionId));
+  }
 }
