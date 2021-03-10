@@ -11,6 +11,7 @@ import {
   ERR_QUESTION_MODIFICATION_PROHIBITED,
 } from 'src/constants';
 import { User } from 'src/user/user.entity';
+import { queryWithPagination } from 'src/utils/pagination';
 import { In, Repository } from 'typeorm';
 import { Question } from './question.entity';
 import { QuestionAnswer } from './question_answer.entity';
@@ -77,6 +78,41 @@ export class QuestionService {
       _.pick(updates, ['content', 'type', 'mode']),
     );
     return;
+  }
+
+  async getQuestions(
+    creator: User,
+    lastCursor: number,
+    size: number,
+    order: 'asc' | 'desc',
+    categoryIds: number[],
+  ) {
+    return queryWithPagination<number, QuestionQuestionCategory>(
+      this.questionQuestionCategoryRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        cursorColumn: 'question.id',
+        query: {
+          where: {
+            question: {
+              creator: {
+                email: creator.email,
+              },
+            },
+            ...(categoryIds.length === 0
+              ? {}
+              : {
+                  category: {
+                    id: In(categoryIds),
+                  },
+                }),
+          },
+          relations: ['question', 'category'],
+        },
+      },
+    );
   }
 
   async createCategory(creator: User, name: string) {

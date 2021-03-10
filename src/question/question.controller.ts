@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -41,6 +43,27 @@ export class QuestionController {
     return await this.questionService.deleteQuestions(
       user,
       questionIds.map((questionId) => parseInt(questionId)),
+    );
+  }
+
+  @Get()
+  async getQuestions(
+    @CurrentUser() user,
+    @Query('last_cursor') lastCursor = '0',
+    @Query('size') size = '10',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('categories') categoryIdsString = '',
+  ) {
+    const categoryIds = (categoryIdsString
+      ? categoryIdsString.split(',')
+      : []
+    ).map((id) => parseInt(id));
+    return await this.questionService.getQuestions(
+      user,
+      parseInt(lastCursor),
+      parseInt(size),
+      order,
+      categoryIds,
     );
   }
 

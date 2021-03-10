@@ -27,14 +27,14 @@ export class NotificationController {
   @Get()
   async getAllPublicNotifications(
     @CurrentUser() user: User,
-    @Query('last_cursor') lastCursor: number,
-    @Query('size') size = 10,
+    @Query('last_cursor') lastCursor = '0',
+    @Query('size') size = '10',
     @Query('type') type: NotificationType = 'public',
   ) {
     return await this.notificationService.getNotifications(
       user,
-      lastCursor,
-      size,
+      parseInt(lastCursor),
+      parseInt(size),
       type,
     );
   }

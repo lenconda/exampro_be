@@ -40,10 +40,14 @@ export class AdminController {
   @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async getUserList(
     @Query('last_cursor') lastCursor = '',
-    @Query('size') size = -1,
+    @Query('size') size = '-1',
     @Query('order') order = 'asc',
   ) {
-    return await this.userService.getUserList<string>(lastCursor, size, order);
+    return await this.userService.getUserList<string>(
+      lastCursor,
+      parseInt(size),
+      order,
+    );
   }
 
   @Get('/user/:email')
@@ -71,12 +75,17 @@ export class AdminController {
   @Get('/menu')
   @Role('user/admin/system', 'user/admin/layout', 'user/admin/role')
   async queryMenu(
-    @Query('last_cursor') lastCursor = 0,
-    @Query('size') size = -1,
+    @Query('last_cursor') lastCursor = '0',
+    @Query('size') size = '-1',
     @Query('role') roleId: string,
     @Query('order') order: 'asc' | 'desc' = 'asc',
   ) {
-    return await this.menuService.queryMenu(lastCursor, size, order, roleId);
+    return await this.menuService.queryMenu(
+      parseInt(lastCursor),
+      parseInt(size),
+      order,
+      roleId,
+    );
   }
 
   @Post('/menu')
