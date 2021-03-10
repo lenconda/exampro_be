@@ -1,3 +1,5 @@
+import { Paper } from 'src/paper/paper.entity';
+import { PaperQuestion } from 'src/paper/paper_question.entity';
 import { User } from 'src/user/user.entity';
 import {
   Entity,
@@ -65,6 +67,9 @@ export class Question {
   })
   @JoinColumn({ name: 'creator_email' })
   creator: User;
+
+  @OneToMany(() => PaperQuestion, (paperQuestion) => paperQuestion.question)
+  papers: Paper[];
 
   @Column({ type: 'enum', enum: QuestionTypes })
   type: string;

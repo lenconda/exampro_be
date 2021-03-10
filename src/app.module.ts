@@ -22,6 +22,7 @@ import { MenuModule } from './menu/menu.module';
 import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 import { QuestionModule } from './question/question.module';
+import { PaperModule } from './paper/paper.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { QuestionModule } from './question/question.module';
     AdminModule,
     MailModule,
     QuestionModule,
+    PaperModule,
   ],
   controllers: [AppController],
   providers: [

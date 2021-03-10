@@ -1,3 +1,4 @@
+import { PaperUser } from 'src/paper/paper_user.entity';
 import {
   Entity,
   CreateDateColumn,
@@ -32,4 +33,7 @@ export class Role {
 
   @OneToMany(() => MenuRole, (menuRole) => menuRole.role)
   menuRoles: MenuRole[];
+
+  @OneToMany(() => PaperUser, (paperUser) => paperUser.role)
+  paperUsers: PaperUser[];
 }

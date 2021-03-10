@@ -12,6 +12,8 @@ import { UserNotification } from 'src/notification/user_notification.entity';
 import { UserRole } from 'src/role/user_role.entity';
 import { Question } from 'src/question/question.entity';
 import { QuestionCategory } from 'src/question/question_category.entity';
+import { PaperUser } from 'src/paper/paper_user.entity';
+import { Paper } from 'src/paper/paper.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -47,6 +49,9 @@ export class User {
 
   @OneToMany(() => Notification, (notification) => notification.sender)
   sendedNotifications: Notification[];
+
+  @OneToMany(() => PaperUser, (paperUser) => paperUser.user)
+  papers: Paper[];
 
   @OneToMany(
     () => UserNotification,
