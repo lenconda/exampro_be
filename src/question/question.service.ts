@@ -12,7 +12,7 @@ import {
 } from 'src/constants';
 import { User } from 'src/user/user.entity';
 import { queryWithPagination } from 'src/utils/pagination';
-import { In, Repository } from 'typeorm';
+import { FindManyOptions, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Question } from './question.entity';
 import { QuestionAnswer } from './question_answer.entity';
 import { QuestionCategory } from './question_category.entity';
@@ -87,21 +87,38 @@ export class QuestionService {
     order: 'asc' | 'desc',
     categoryIds: number[],
   ) {
-    return queryWithPagination<number, QuestionQuestionCategory>(
+    const query: FindManyOptions<Question> =
+      categoryIds.length > 0
+        ? {
+            join: {
+              alias: 'questions',
+              innerJoin: {
+                categories: 'questions.categories',
+              },
+            },
+            where: (qb: SelectQueryBuilder<Question>) => {
+              qb.where({
+                creator: {
+                  email: creator.email,
+                },
+              }).andWhere('categories.category.id IN (:categoryId)', {
+                categoryId: categoryIds,
+              });
+            },
+          }
+        : {
+            where: {
+              creator: {
+                email: creator.email,
+              },
+            },
+          };
+    return queryWithPagination<number, Question>(
       this.questionRepository,
       lastCursor,
       order.toUpperCase() as 'ASC' | 'DESC',
       size,
-      {
-        // query: {
-        //   where: {
-        //     creator: {
-        //       email: creator.email,
-        //     },
-        //   },
-        //   relations: ['creator'],
-        // },
-      },
+      { query },
     );
   }
 
