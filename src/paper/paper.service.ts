@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
+import { Question } from 'src/question/question.entity';
 import { Role } from 'src/role/role.entity';
 import { User } from 'src/user/user.entity';
 import { queryWithPagination } from 'src/utils/pagination';
 import { In, Repository } from 'typeorm';
 import { Paper } from './paper.entity';
+import { PaperQuestion } from './paper_question.entity';
 import { PaperUser } from './paper_user.entity';
 
 @Injectable()
@@ -17,6 +19,10 @@ export class PaperService {
     private readonly paperUserRepository: Repository<PaperUser>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
+    @InjectRepository(Question)
+    private readonly questionRepository: Repository<Question>,
+    @InjectRepository(PaperQuestion)
+    private readonly paperQuestionRepository: Repository<PaperQuestion>,
   ) {}
 
   async createPaper(creator: User, title: string, isPublic: boolean) {
@@ -79,13 +85,17 @@ export class PaperService {
     }
   }
 
-  async getPaper(paperId: number) {
-    return this.paperRepository.findOne({
+  async getPaper(creator: User, paperId: number) {
+    const data = await this.paperRepository.findOne({
       where: {
         id: paperId,
       },
-      relations: ['users', 'users.role', 'users.user'],
+      relations: ['users', 'users.user', 'users.role'],
     });
+    const roles = data.users
+      .filter((userRole) => userRole.user.email === creator.email)
+      .map((userRole) => userRole.role);
+    return _.merge(_.omit(data, ['users']), { roles });
   }
 
   async getPapers(
@@ -111,13 +121,81 @@ export class PaperService {
               id: In(roleIds),
             },
           },
-          relations: ['paper'],
+          relations: ['paper', 'role'],
         },
       },
     );
     return {
-      items: data.items.map((item) => item.paper),
+      items: data.items.map((item) =>
+        _.merge(_.omit(item.paper, ['role']), { role: item.role }),
+      ),
       total: data.total,
     };
+  }
+
+  async createPaperQuestion(
+    paperId: number,
+    questionId: number,
+    order: number,
+  ) {
+    const paper = await this.paperRepository.findOne({ id: paperId });
+    const question = await this.questionRepository.findOne({ id: questionId });
+
+    if (
+      !(await this.paperQuestionRepository.findOne({
+        where: {
+          paper: {
+            id: paper.id,
+          },
+          question: {
+            id: question.id,
+          },
+        },
+      }))
+    ) {
+      await this.paperQuestionRepository.save(
+        this.paperQuestionRepository.create({
+          paper,
+          question,
+          order,
+        }),
+      );
+    }
+
+    return;
+  }
+
+  async deletePaperQuestions(paperId: number, questionIds: number[]) {
+    const paperQuestions = await this.paperQuestionRepository.find({
+      paper: {
+        id: paperId,
+      },
+      question: {
+        id: In(questionIds),
+      },
+    });
+    await this.paperQuestionRepository.delete(
+      paperQuestions.map((paperQuestion) => paperQuestion.id),
+    );
+  }
+
+  async getPaperQuestions(paperId: number, answers: boolean) {
+    const relations = ['question', 'question.choices'];
+    if (answers) {
+      relations.push('question.answers');
+    }
+    const paperQuestions = await this.paperQuestionRepository.find({
+      where: {
+        paper: {
+          id: paperId,
+        },
+      },
+      order: {
+        'question.id': 'ASC',
+      } as any,
+      relations,
+    });
+    const items = paperQuestions.map((paperQuestion) => paperQuestion.question);
+    return { items };
   }
 }

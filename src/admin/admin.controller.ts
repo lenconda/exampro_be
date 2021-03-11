@@ -38,15 +38,17 @@ export class AdminController {
 
   @Get('/user')
   @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
-  async getUserList(
+  async queryUsers(
     @Query('last_cursor') lastCursor = '',
+    @Query('query') query = '',
     @Query('size') size = '-1',
     @Query('order') order = 'asc',
   ) {
-    return await this.userService.getUserList<string>(
+    return await this.userService.queryUsers<string>(
       lastCursor,
       parseInt(size),
       order,
+      query,
     );
   }
 

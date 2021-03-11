@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from './user.entity';
 import md5 from 'md5';
 import { Role } from 'src/role/role.entity';
@@ -62,7 +62,8 @@ export class UserService {
     return adminUser;
   }
 
-  async getUserList<T>(lastCursor: T, size = -1, order = 'asc') {
+  async queryUsers<T>(lastCursor: T, size = -1, order = 'asc', query = '') {
+    const likeQuery = `%${query}%`;
     return await queryWithPagination<T, User>(
       this.userRepository,
       lastCursor,
@@ -74,6 +75,18 @@ export class UserService {
           order: {
             email: order.toUpperCase() as 'ASC' | 'DESC',
           },
+          ...(query
+            ? {
+                where: [
+                  {
+                    email: Like(likeQuery),
+                  },
+                  {
+                    name: Like(likeQuery),
+                  },
+                ],
+              }
+            : {}),
         },
       },
     );

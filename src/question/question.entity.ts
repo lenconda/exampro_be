@@ -1,4 +1,3 @@
-import { Paper } from 'src/paper/paper.entity';
 import { PaperQuestion } from 'src/paper/paper_question.entity';
 import { User } from 'src/user/user.entity';
 import {
@@ -11,6 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   ManyToOne,
+  JoinTable,
 } from 'typeorm';
 import { QuestionAnswer } from './question_answer.entity';
 import { QuestionCategory } from './question_category.entity';
@@ -59,6 +59,7 @@ export class Question {
   answers: QuestionAnswer[];
 
   @OneToMany(() => QuestionChoice, (choice) => choice.question)
+  @JoinTable()
   choices: QuestionChoice[];
 
   @ManyToOne(() => User, (user) => user.questions, {
@@ -69,7 +70,7 @@ export class Question {
   creator: User;
 
   @OneToMany(() => PaperQuestion, (paperQuestion) => paperQuestion.question)
-  papers: Paper[];
+  papers: PaperQuestion[];
 
   @Column({ type: 'enum', enum: QuestionTypes })
   type: string;

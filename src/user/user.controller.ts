@@ -5,6 +5,7 @@ import {
   Get,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -20,6 +21,21 @@ export class UserController {
   @Get('/profile')
   async getProfile(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Get('/find')
+  async queryUsers(
+    @Query('last_cursor') lastCursor = '',
+    @Query('query') query = '',
+    @Query('size') size = '-1',
+    @Query('order') order = 'asc',
+  ) {
+    return await this.userService.queryUsers<string>(
+      lastCursor,
+      parseInt(size),
+      order,
+      query,
+    );
   }
 
   @Patch('/profile')

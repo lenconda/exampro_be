@@ -53,14 +53,45 @@ export class PaperController {
     );
   }
 
+  @Post('/:paper/questions')
+  async createPaperQuestion(
+    @Param('paper') paperId: number,
+    @Body('question') questionId: number,
+    @Body('order') order: number,
+  ) {
+    return await this.paperService.createPaperQuestion(
+      paperId,
+      questionId,
+      order,
+    );
+  }
+
+  @Delete('/:paper/questions')
+  async deletePaperQuestions(
+    @Param('paper') paperId: number,
+    @Body('questions') questionIds: number[],
+  ) {
+    return await this.paperService.deletePaperQuestions(paperId, questionIds);
+  }
+
+  @Get('/:paper/questions')
+  async getPaperQuestions(@Param('paper') paperId: number) {
+    return await this.paperService.getPaperQuestions(paperId, false);
+  }
+
+  @Get('/:paper/questions_answers')
+  async getPaperQuestionsWithAnswers(@Param('paper') paperId: number) {
+    return await this.paperService.getPaperQuestions(paperId, true);
+  }
+
   @Delete('/:paper')
   async deletePaper(@CurrentUser() user, @Param('paper') paperId: string) {
     return await this.paperService.deletePapers(user, [parseInt(paperId)]);
   }
 
   @Get('/:paper')
-  async getPaper(@Param('paper') paperId: string) {
-    return await this.paperService.getPaper(parseInt(paperId));
+  async getPaper(@CurrentUser() user, @Param('paper') paperId: string) {
+    return await this.paperService.getPaper(user, parseInt(paperId));
   }
 
   @Patch('/:paper')

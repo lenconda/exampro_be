@@ -47,6 +47,7 @@ export class MenuService {
         size,
         {
           cursorColumn: 'menu.id',
+          orderColumn: 'menu.id',
           query: {
             where: { role },
             relations: ['menu'],

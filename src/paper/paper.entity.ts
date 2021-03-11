@@ -1,5 +1,3 @@
-import { Question } from 'src/question/question.entity';
-import { User } from 'src/user/user.entity';
 import {
   Entity,
   CreateDateColumn,
@@ -8,6 +6,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
+  JoinTable,
 } from 'typeorm';
 import { PaperQuestion } from './paper_question.entity';
 import { PaperUser } from './paper_user.entity';
@@ -24,10 +23,11 @@ export class Paper {
   title: string;
 
   @OneToMany(() => PaperQuestion, (paperQuestion) => paperQuestion.paper)
-  questions: Question[];
+  @JoinTable()
+  questions: PaperQuestion[];
 
   @OneToMany(() => PaperUser, (paperUser) => paperUser.paper)
-  users: User[];
+  users: PaperUser[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

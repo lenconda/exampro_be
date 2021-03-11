@@ -3,6 +3,7 @@ import _ from 'lodash';
 
 export interface QueryPaginationOptions<K> {
   cursorColumn?: string;
+  orderColumn?: string;
   query?: FindManyOptions<K>;
 }
 
@@ -13,7 +14,7 @@ export const queryWithPagination = async <T, K>(
   size: number,
   options: QueryPaginationOptions<K> = {},
 ): Promise<{ items: K[]; total?: number }> => {
-  const { cursorColumn = 'id', query = {} } = options;
+  const { cursorColumn = 'id', orderColumn = 'id', query = {} } = options;
   if (size === -1) {
     return {
       items: await repository.find(query),
@@ -29,6 +30,11 @@ export const queryWithPagination = async <T, K>(
           cursorOrder === 'ASC' ? MoreThan(lastCursor) : LessThan(lastCursor),
         )
       : {},
+    {
+      order: {
+        [orderColumn]: cursorOrder,
+      },
+    },
   );
 
   const itemsQuery = {
