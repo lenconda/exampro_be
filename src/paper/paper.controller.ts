@@ -115,6 +115,19 @@ export class PaperController {
     );
   }
 
+  @Patch('/:paper/owner')
+  async transformOwnership(
+    @Param('paper') paperId: number,
+    @CurrentUser() user,
+    @Body('email') newEmail: string,
+  ) {
+    return await this.paperService.transformOwnership(
+      paperId,
+      user.email,
+      newEmail,
+    );
+  }
+
   @Delete('/:paper')
   async deletePaper(@CurrentUser() user, @Param('paper') paperId: number) {
     return await this.paperService.deletePapers(user, [paperId]);

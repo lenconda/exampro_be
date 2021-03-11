@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import { Question } from 'src/question/question.entity';
@@ -284,5 +284,73 @@ export class PaperService {
       items: data.items.map((item) => item.user),
       total: data.total,
     };
+  }
+
+  async transformOwnership(
+    paperId: number,
+    formerOwnerEmail: string,
+    newOwnerEmail: string,
+  ) {
+    const formerOwnership = await this.paperUserRepository.findOne({
+      where: {
+        paper: {
+          id: paperId,
+        },
+        user: {
+          email: formerOwnerEmail,
+        },
+        role: {
+          id: 'resource/paper/owner',
+        },
+      },
+    });
+    if (!formerOwnership) {
+      throw new BadRequestException();
+    }
+    const existedFormerMaintainerShip = await this.paperUserRepository.findOne({
+      where: {
+        paper: {
+          id: paperId,
+        },
+        user: {
+          email: newOwnerEmail,
+        },
+        role: {
+          id: 'resource/paper/maintainer',
+        },
+      },
+      relations: ['role'],
+    });
+    if (existedFormerMaintainerShip) {
+      existedFormerMaintainerShip.role.id = 'resource/paper/owner';
+      await this.paperUserRepository.save(existedFormerMaintainerShip);
+    } else {
+      await this.paperUserRepository.save(
+        this.paperUserRepository.create({
+          user: {
+            email: newOwnerEmail,
+          },
+          role: {
+            id: 'resource/paper/owner',
+          },
+          paper: {
+            id: paperId,
+          },
+        }),
+      );
+    }
+    await this.paperUserRepository.update(
+      {
+        user: {
+          email: formerOwnerEmail,
+        },
+      },
+      {
+        role: {
+          id: 'resource/paper/maintainer',
+        },
+      },
+    );
+    return;
   }
 }
