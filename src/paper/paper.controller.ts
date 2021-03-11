@@ -4,7 +4,9 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -15,6 +17,24 @@ import { PaperService } from './paper.service';
 @UseGuards(AuthGuard('jwt'))
 export class PaperController {
   constructor(private readonly paperService: PaperService) {}
+
+  @Get()
+  async getPapers(
+    @CurrentUser() user,
+    @Query('last_cursor') lastCursor = '',
+    @Query('size') size = '10',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('roles') roles = 'resource/paper/owner,resource/paper/maintainer',
+  ) {
+    const roleIds = roles ? roles.split(',') : [];
+    return await this.paperService.getPapers(
+      user,
+      parseInt(lastCursor),
+      parseInt(size),
+      order,
+      roleIds,
+    );
+  }
 
   @Post()
   async createPaper(
@@ -41,5 +61,18 @@ export class PaperController {
   @Get('/:paper')
   async getPaper(@Param('paper') paperId: string) {
     return await this.paperService.getPaper(parseInt(paperId));
+  }
+
+  @Patch('/:paper')
+  async updatePaper(
+    @CurrentUser() user,
+    @Param('paper') paperId: string,
+    @Body() updates: Record<string, any>,
+  ) {
+    return await this.paperService.updatePaper(
+      user,
+      parseInt(paperId),
+      updates,
+    );
   }
 }
