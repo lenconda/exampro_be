@@ -7,13 +7,12 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthService } from './auth.service';
-import _ from 'lodash';
+import { AuthService } from 'src/auth/auth.service';
 
 export type Response = Record<string, any>;
 
 @Injectable()
-export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
+export class AppInterceptor<T> implements NestInterceptor<T, Response> {
   constructor(private readonly authService: AuthService) {}
 
   async intercept(
@@ -38,7 +37,6 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
      */
     if (pathname === '/api/auth/logout') {
       await this.authService.blockToken(token);
-      return next.handle();
     }
 
     const additionalResponseData = {} as Record<string, any>;
@@ -58,12 +56,16 @@ export class AuthInterceptor<T> implements NestInterceptor<T, Response> {
 
     return next.handle().pipe(
       map(async (data) => {
-        if (!data) {
-          return { message: 'OK' };
+        let result = data;
+        if (!result.message || !result.data) {
+          result = { message: 'OK', data };
         }
-        const result = _.merge(data, additionalResponseData);
-        if (result.token) {
+        if (additionalResponseData.token) {
           await this.authService.blockToken(token);
+          result = {
+            ...result,
+            token: additionalResponseData.token,
+          };
         }
         return result;
       }),

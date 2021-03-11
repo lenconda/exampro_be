@@ -14,7 +14,6 @@ import { Role } from './role/role.entity';
 import { User } from './user/user.entity';
 import { UserRole } from './role/user_role.entity';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { AuthInterceptor } from './auth/auth.interceptor';
 import { RedisModule } from 'nestjs-redis';
 import { ConfigService } from './config/config.service';
 import { ConfigModule } from './config/config.module';
@@ -23,6 +22,7 @@ import { AdminModule } from './admin/admin.module';
 import { MailModule } from './mail/mail.module';
 import { QuestionModule } from './question/question.module';
 import { PaperModule } from './paper/paper.module';
+import { AppInterceptor } from './app.interceptor';
 
 @Module({
   imports: [
@@ -72,7 +72,7 @@ import { PaperModule } from './paper/paper.module';
     AppService,
     {
       provide: APP_INTERCEPTOR,
-      useClass: AuthInterceptor,
+      useClass: AppInterceptor,
     },
   ],
 })
