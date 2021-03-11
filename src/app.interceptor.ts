@@ -57,6 +57,9 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
     return next.handle().pipe(
       map(async (data) => {
         let result = data;
+        if (!result) {
+          result = { message: 'OK', data: {} };
+        }
         if (!result.message || !result.data) {
           result = { message: 'OK', data };
         }
