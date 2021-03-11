@@ -84,9 +84,40 @@ export class PaperController {
     return await this.paperService.getPaperQuestions(paperId, true);
   }
 
+  @Post('/:paper/maintainers')
+  async createPaperMaintainers(
+    @Param('paper') paperId: number,
+    @Body('emails') maintainerEmails: string[] = [],
+  ) {
+    return this.paperService.createPaperMaintainers(paperId, maintainerEmails);
+  }
+
+  @Delete('/:paper/maintainers')
+  async deletePaperMaintainers(
+    @Param('paper') paperId: number,
+    @Body('emails') maintainerEmails: string[] = [],
+  ) {
+    return this.paperService.deletePaperMaintainers(paperId, maintainerEmails);
+  }
+
+  @Get('/:paper/maintainers')
+  async getPaperMaintainers(
+    @Param('paper') paperId: number,
+    @Query('last_cursor') lastCursor = '',
+    @Query('size') size = '10',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+  ) {
+    return this.paperService.getPaperMaintainers(
+      paperId,
+      parseInt(lastCursor),
+      parseInt(size),
+      order,
+    );
+  }
+
   @Delete('/:paper')
-  async deletePaper(@CurrentUser() user, @Param('paper') paperId: string) {
-    return await this.paperService.deletePapers(user, [parseInt(paperId)]);
+  async deletePaper(@CurrentUser() user, @Param('paper') paperId: number) {
+    return await this.paperService.deletePapers(user, [paperId]);
   }
 
   @Get('/:paper')

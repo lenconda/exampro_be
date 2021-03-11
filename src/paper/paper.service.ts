@@ -198,4 +198,91 @@ export class PaperService {
     const items = paperQuestions.map((paperQuestion) => paperQuestion.question);
     return { items };
   }
+
+  async createPaperMaintainers(paperId: number, maintainerEmails: string[]) {
+    const existedMaintainerEmails = (
+      await this.paperUserRepository.find({
+        where: {
+          paper: {
+            id: paperId,
+          },
+          user: {
+            email: In(maintainerEmails),
+          },
+          role: {
+            id: 'resource/paper/maintainer',
+          },
+        },
+        relations: ['user'],
+      })
+    ).map((maintainer) => maintainer.user.email);
+    const maintainerEmailsToBeInserted = _.difference(
+      maintainerEmails,
+      existedMaintainerEmails,
+    );
+    if (maintainerEmailsToBeInserted.length > 0) {
+      await this.paperUserRepository.save(
+        maintainerEmailsToBeInserted.map((email) => {
+          return this.paperUserRepository.create({
+            user: { email },
+            paper: {
+              id: paperId,
+            },
+            role: {
+              id: 'resource/paper/maintainer',
+            },
+          });
+        }),
+      );
+    }
+    return;
+  }
+
+  async deletePaperMaintainers(paperId: number, maintainerEmails: string[]) {
+    const paperUsers = await this.paperUserRepository.find({
+      where: {
+        paper: {
+          id: paperId,
+        },
+        user: {
+          email: In(maintainerEmails),
+        },
+      },
+    });
+    if (paperUsers.length > 0) {
+      await this.paperUserRepository.delete(
+        paperUsers.map((paperUser) => paperUser.id),
+      );
+    }
+  }
+
+  async getPaperMaintainers(
+    paperId: number,
+    lastCursor: number,
+    size: number,
+    order: 'asc' | 'desc',
+  ) {
+    const data = await queryWithPagination<number, PaperUser>(
+      this.paperUserRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        cursorColumn: 'user.email',
+        orderColumn: 'id',
+        query: {
+          where: {
+            paper: {
+              id: paperId,
+            },
+          },
+          relations: ['user'],
+        },
+      },
+    );
+    return {
+      items: data.items.map((item) => item.user),
+      total: data.total,
+    };
+  }
 }

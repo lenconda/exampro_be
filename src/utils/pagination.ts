@@ -14,7 +14,11 @@ export const queryWithPagination = async <T, K>(
   size: number,
   options: QueryPaginationOptions<K> = {},
 ): Promise<{ items: K[]; total?: number }> => {
-  const { cursorColumn = 'id', orderColumn = 'id', query = {} } = options;
+  const {
+    cursorColumn = 'id',
+    orderColumn = cursorColumn,
+    query = {},
+  } = options;
   if (size === -1) {
     return {
       items: await repository.find(query),
