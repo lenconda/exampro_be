@@ -88,33 +88,26 @@ export class QuestionService {
     search: string,
     categoryIds: number[],
   ) {
-    const query: FindManyOptions<Question> =
-      categoryIds.length > 0
-        ? {
-            join: {
-              alias: 'questions',
-              innerJoin: {
-                categories: 'questions.categories',
-                creator: 'questions.creator',
-              },
-            },
-            where: (qb: SelectQueryBuilder<Question>) => {
-              qb.andWhere('creator.email = :email', {
-                email: creator.email,
-              }).andWhere('categories.category.id IN (:categoryId)', {
-                categoryId: categoryIds,
-              });
-            },
-            relations: ['choices', 'answers'],
-          }
-        : {
-            where: {
-              creator: {
-                email: creator.email,
-              },
-            },
-            relations: ['choices', 'answers'],
-          };
+    const query: FindManyOptions<Question> = {
+      join: {
+        alias: 'questions',
+        innerJoin: {
+          categories: 'questions.categories',
+          creator: 'questions.creator',
+        },
+      },
+      where: (qb: SelectQueryBuilder<Question>) => {
+        qb.andWhere('creator.email = :email', {
+          email: creator.email,
+        });
+        if (categoryIds.length > 0) {
+          qb.andWhere('categories.category.id IN (:categoryId)', {
+            categoryId: categoryIds,
+          });
+        }
+      },
+      relations: ['choices', 'answers'],
+    };
     return queryWithPagination<number, Question>(
       this.questionRepository,
       lastCursor,
@@ -124,6 +117,7 @@ export class QuestionService {
         query,
         searchColumns: ['questions.content'],
         search,
+        searchWithAlias: true,
       },
     );
   }

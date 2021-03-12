@@ -6,6 +6,7 @@ export interface QueryPaginationOptions<K> {
   orderColumn?: string;
   search?: string;
   searchColumns?: string[];
+  searchWithAlias?: boolean;
   query?: FindManyOptions<K>;
 }
 
@@ -22,6 +23,7 @@ export const queryWithPagination = async <T, K>(
     searchColumns = [],
     search = '',
     query = {},
+    searchWithAlias = false,
   } = options;
 
   const customWhere = _.get(query, 'where');
@@ -54,13 +56,17 @@ export const queryWithPagination = async <T, K>(
 
   const cursorQueryHandler = (qb: SelectQueryBuilder<K>) => {
     if (!_.isNull(lastCursor) && !_.isEmpty(lastCursor)) {
-      qb.andWhere((subQb) => {
-        subQb.where(
-          `${cursorColumn} ${cursorOrder === 'ASC' ? '>' : '<'} :lastCursor`,
-          { lastCursor },
-        );
-        return '';
-      });
+      const query = `${cursorColumn} ${
+        cursorOrder === 'ASC' ? '>' : '<'
+      } :lastCursor`;
+      if (searchWithAlias) {
+        qb.andWhere((subQb) => {
+          subQb.where(query, { lastCursor });
+          return '';
+        });
+      } else {
+        qb.andWhere(query, { lastCursor });
+      }
     }
   };
 
