@@ -80,7 +80,7 @@ export class QuestionService {
     return;
   }
 
-  async getQuestions(
+  async queryQuestions(
     creator: User,
     lastCursor: number,
     size: number,
@@ -101,11 +101,12 @@ export class QuestionService {
                 creator: {
                   email: creator.email,
                 },
-              }).andWhere('categories.category.id IN (:categoryId)', {
+              });
+              qb.andWhere('categories.category.id IN (:categoryId)', {
                 categoryId: categoryIds,
               });
             },
-            relations: ['choices', 'answers'],
+            relations: ['choices', 'answers', 'categories'],
           }
         : {
             where: {

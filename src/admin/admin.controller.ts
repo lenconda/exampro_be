@@ -40,7 +40,7 @@ export class AdminController {
   @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async queryUsers(
     @Query('last_cursor') lastCursor = '',
-    @Query('query') query = '',
+    @Query('search') search = '',
     @Query('size') size = '-1',
     @Query('order') order = 'asc',
   ) {
@@ -48,7 +48,7 @@ export class AdminController {
       lastCursor,
       parseInt(size),
       order,
-      query,
+      search,
     );
   }
 

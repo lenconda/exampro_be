@@ -58,7 +58,7 @@ export class QuestionController {
       ? categoryIdsString.split(',')
       : []
     ).map((id) => parseInt(id));
-    return await this.questionService.getQuestions(
+    return await this.questionService.queryQuestions(
       user,
       lastCursor ? parseInt(lastCursor) : null,
       parseInt(size),

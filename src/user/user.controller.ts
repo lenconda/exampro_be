@@ -23,10 +23,10 @@ export class UserController {
     return user;
   }
 
-  @Get('/find')
+  @Get('/list')
   async queryUsers(
     @Query('last_cursor') lastCursor = '',
-    @Query('query') query = '',
+    @Query('search') search = '',
     @Query('size') size = '-1',
     @Query('order') order = 'asc',
   ) {
@@ -34,7 +34,7 @@ export class UserController {
       lastCursor,
       parseInt(size),
       order,
-      query,
+      search,
     );
   }
 

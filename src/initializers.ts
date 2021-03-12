@@ -42,6 +42,7 @@ export const generateRoles = () => {
             { name: 'initiator' },
             { name: 'invigilator' },
             { name: 'participant' },
+            { name: 'reviewer' },
           ],
         },
       ],

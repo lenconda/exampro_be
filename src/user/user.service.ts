@@ -62,32 +62,16 @@ export class UserService {
     return adminUser;
   }
 
-  async queryUsers<T>(lastCursor: T, size = -1, order = 'asc', query = '') {
-    const likeQuery = `%${query}%`;
+  async queryUsers<T>(lastCursor: T, size = -1, order = 'asc', search = '') {
     return await queryWithPagination<T, User>(
       this.userRepository,
       lastCursor,
-      'ASC',
+      order.toUpperCase() as 'ASC' | 'DESC',
       size,
       {
+        search,
         cursorColumn: 'email',
-        query: {
-          order: {
-            email: order.toUpperCase() as 'ASC' | 'DESC',
-          },
-          ...(query
-            ? {
-                where: [
-                  {
-                    email: Like(likeQuery),
-                  },
-                  {
-                    name: Like(likeQuery),
-                  },
-                ],
-              }
-            : {}),
-        },
+        searchColumns: ['email', 'name'],
       },
     );
   }

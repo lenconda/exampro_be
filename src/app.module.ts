@@ -23,6 +23,7 @@ import { MailModule } from './mail/mail.module';
 import { QuestionModule } from './question/question.module';
 import { PaperModule } from './paper/paper.module';
 import { AppInterceptor } from './app.interceptor';
+import { ExamModule } from './exam/exam.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { AppInterceptor } from './app.interceptor';
     MailModule,
     QuestionModule,
     PaperModule,
+    ExamModule,
   ],
   controllers: [AppController],
   providers: [
