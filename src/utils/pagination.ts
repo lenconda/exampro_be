@@ -1,10 +1,5 @@
 import _ from 'lodash';
-import {
-  FindConditions,
-  FindManyOptions,
-  Repository,
-  SelectQueryBuilder,
-} from 'typeorm';
+import { FindManyOptions, Repository, SelectQueryBuilder } from 'typeorm';
 
 export interface QueryPaginationOptions<K> {
   cursorColumn?: string;
@@ -31,7 +26,13 @@ export const queryWithPagination = async <T, K>(
 
   const customWhere = _.get(query, 'where');
 
-  const baseQueryHandler = (qb: SelectQueryBuilder<K>, hasWhere = false) => {
+  const customWhereFunctionHandler = (qb: SelectQueryBuilder<K>) => {
+    if (_.isFunction(customWhere)) {
+      customWhere(qb);
+    }
+  };
+
+  const searchQueryHandler = (qb: SelectQueryBuilder<K>) => {
     const handleSubQb = (subQb) => {
       for (const [index, searchColumn] of searchColumns.entries()) {
         if (index === 0) {
@@ -47,11 +48,19 @@ export const queryWithPagination = async <T, K>(
       return '';
     };
     if (search) {
-      if (hasWhere) {
-        qb.andWhere(handleSubQb);
-      } else {
-        qb.where(handleSubQb);
-      }
+      qb.andWhere(handleSubQb);
+    }
+  };
+
+  const cursorQueryHandler = (qb: SelectQueryBuilder<K>) => {
+    if (!_.isNull(lastCursor) && !_.isEmpty(lastCursor)) {
+      qb.andWhere((subQb) => {
+        subQb.where(
+          `${cursorColumn} ${cursorOrder === 'ASC' ? '>' : '<'} :lastCursor`,
+          { lastCursor },
+        );
+        return '';
+      });
     }
   };
 
@@ -62,30 +71,28 @@ export const queryWithPagination = async <T, K>(
     },
   } as FindManyOptions<K>;
 
-  const countWhereQuery = {
+  let itemsWhereConditions = {};
+  let totalWhereConditions = {};
+
+  if (_.isObject(customWhere) && !_.isFunction(customWhere)) {
+    itemsWhereConditions = _.merge(itemsWhereConditions, customWhere);
+    totalWhereConditions = _.merge(totalWhereConditions, customWhere);
+  }
+
+  const totalWhereQuery = {
     where: (qb: SelectQueryBuilder<K>) => {
-      if (_.isFunction(customWhere)) {
-        customWhere(qb);
-      } else if (!_.isEmpty(customWhere)) {
-        // qb.where(customWhere as FindConditions<K>);
-      }
-      baseQueryHandler(qb);
+      qb.where(totalWhereConditions);
+      searchQueryHandler(qb);
+      customWhereFunctionHandler(qb);
+      cursorQueryHandler(qb);
     },
   } as FindManyOptions<K>;
-  const whereQuery = {
+  const itemsWhereQuery = {
     where: (qb: SelectQueryBuilder<K>) => {
-      if (_.isFunction(customWhere)) {
-        customWhere(qb);
-      } else {
-        // qb.where(customWhere as FindConditions<K>);
-      }
-      if (lastCursor) {
-        qb.andWhere(
-          `${cursorColumn} ${cursorOrder === 'ASC' ? '>' : '<'} :lastCursor`,
-          { lastCursor },
-        );
-      }
-      baseQueryHandler(qb);
+      qb.where(itemsWhereConditions);
+      searchQueryHandler(qb);
+      customWhereFunctionHandler(qb);
+      cursorQueryHandler(qb);
     },
   } as FindManyOptions<K>;
 
@@ -95,13 +102,13 @@ export const queryWithPagination = async <T, K>(
 
   const itemsQuery = {
     ..._.omit(query, ['where']),
-    ...whereQuery,
+    ...itemsWhereQuery,
     ...takeQuery,
     ...orderQuery,
   } as FindManyOptions;
   const totalQuery = {
     ..._.omit(query, ['where']),
-    ...countWhereQuery,
+    ...totalWhereQuery,
     ...orderQuery,
   };
 

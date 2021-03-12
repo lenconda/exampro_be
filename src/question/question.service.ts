@@ -99,8 +99,9 @@ export class QuestionService {
               },
             },
             where: (qb: SelectQueryBuilder<Question>) => {
-              qb.andWhere('creator.email = :email', { email: creator.email });
-              qb.andWhere('categories.category.id IN (:categoryId)', {
+              qb.andWhere('creator.email = :email', {
+                email: creator.email,
+              }).andWhere('categories.category.id IN (:categoryId)', {
                 categoryId: categoryIds,
               });
             },
@@ -121,8 +122,6 @@ export class QuestionService {
       size,
       {
         query,
-        orderColumn: 'id',
-        cursorColumn: 'questions.id',
         searchColumns: ['questions.content'],
         search,
       },

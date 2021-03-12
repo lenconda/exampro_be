@@ -59,9 +59,10 @@ export class QuestionController {
       ? categoryIdsString.split(',')
       : []
     ).map((id) => parseInt(id));
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.questionService.queryQuestions(
       user,
-      lastCursor ? parseInt(lastCursor) : null,
+      cursor,
       parseInt(size),
       order,
       search,
