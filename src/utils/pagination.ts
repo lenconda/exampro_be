@@ -1,5 +1,10 @@
 import _ from 'lodash';
-import { FindManyOptions, Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  Brackets,
+  FindManyOptions,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 
 export interface QueryPaginationOptions<K> {
   cursorColumn?: string;
@@ -20,17 +25,16 @@ export const queryWithPagination = async <T, K>(
   const {
     cursorColumn = 'id',
     orderColumn = cursorColumn,
-    searchColumns = [],
+    searchColumns = ['id'],
     search = '',
     query = {},
     searchWithAlias = false,
   } = options;
 
   const customWhere = _.get(query, 'where');
-
   const customWhereFunctionHandler = (qb: SelectQueryBuilder<K>) => {
     if (_.isFunction(customWhere)) {
-      customWhere(qb);
+      qb.andWhere(new Brackets((subQb) => customWhere(subQb)));
     }
   };
 
@@ -50,12 +54,17 @@ export const queryWithPagination = async <T, K>(
       return '';
     };
     if (search) {
-      qb.andWhere(handleSubQb);
+      qb.andWhere(new Brackets(handleSubQb));
     }
   };
 
   const cursorQueryHandler = (qb: SelectQueryBuilder<K>) => {
-    if (!_.isNull(lastCursor) && !_.isEmpty(lastCursor)) {
+    if (
+      !(
+        _.isNull(lastCursor) ||
+        (!_.isNumber(lastCursor) && _.isEmpty(lastCursor))
+      )
+    ) {
       const query = `${cursorColumn} ${
         cursorOrder === 'ASC' ? '>' : '<'
       } :lastCursor`;
@@ -77,8 +86,12 @@ export const queryWithPagination = async <T, K>(
     },
   } as FindManyOptions<K>;
 
-  let itemsWhereConditions = {};
-  let totalWhereConditions = {};
+  let itemsWhereConditions = {
+    deletedAt: null,
+  };
+  let totalWhereConditions = {
+    deletedAt: null,
+  };
 
   if (_.isObject(customWhere) && !_.isFunction(customWhere)) {
     itemsWhereConditions = _.merge(itemsWhereConditions, customWhere);

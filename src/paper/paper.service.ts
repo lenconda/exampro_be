@@ -5,7 +5,7 @@ import { Question } from 'src/question/question.entity';
 import { Role } from 'src/role/role.entity';
 import { User } from 'src/user/user.entity';
 import { queryWithPagination } from 'src/utils/pagination';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Paper } from './paper.entity';
 import { PaperQuestion } from './paper_question.entity';
 import { PaperUser } from './paper_user.entity';
@@ -98,11 +98,12 @@ export class PaperService {
     return _.merge(_.omit(data, ['users']), { roles });
   }
 
-  async getPapers(
+  async queryPapers(
     creator: User,
     lastCursor: number,
     size: number,
     order: 'asc' | 'desc',
+    search: string,
     roleIds: string[],
   ) {
     const data = await queryWithPagination<number, PaperUser>(
@@ -112,14 +113,27 @@ export class PaperService {
       size,
       {
         cursorColumn: 'paper.id',
+        search,
+        searchColumns: ['paper.title'],
         query: {
-          where: {
-            user: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              paper: 'items.paper',
+              user: 'items.user',
+              role: 'items.role',
+            },
+          },
+          where: (qb: SelectQueryBuilder<Paper>) => {
+            qb.andWhere('user.email = :email', {
               email: creator.email,
-            },
-            role: {
-              id: In(roleIds),
-            },
+            });
+            if (roleIds.length > 0) {
+              qb.andWhere('role.id IN (:roleIds)', {
+                roleIds,
+              });
+            }
+            return '';
           },
           relations: ['paper', 'role'],
         },
@@ -256,10 +270,11 @@ export class PaperService {
     }
   }
 
-  async getPaperMaintainers(
+  async queryPaperMaintainers(
     paperId: number,
     lastCursor: number,
     size: number,
+    search: string,
     order: 'asc' | 'desc',
   ) {
     const data = await queryWithPagination<number, PaperUser>(
@@ -268,13 +283,24 @@ export class PaperService {
       order.toUpperCase() as 'ASC' | 'DESC',
       size,
       {
-        cursorColumn: 'user.email',
-        orderColumn: 'id',
+        cursorColumn: 'id',
+        search,
+        searchColumns: ['user.email', 'user.name'],
+        searchWithAlias: true,
         query: {
-          where: {
-            paper: {
-              id: paperId,
+          join: {
+            alias: 'items',
+            leftJoin: {
+              paper: 'items.paper',
+              user: 'items.user',
+              role: 'items.role',
             },
+          },
+          where: (qb: SelectQueryBuilder<Paper>) => {
+            qb.where('paper.id = :paperId', { paperId });
+            qb.andWhere('role.id = :roleId', {
+              roleId: 'resource/paper/maintainer',
+            });
           },
           relations: ['user'],
         },

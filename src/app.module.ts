@@ -36,6 +36,7 @@ import { ExamModule } from './exam/exam.module';
           ),
           keepConnectionAlive: true,
           synchronize: true,
+          logging: ['query'],
         };
       },
       inject: [ConfigService],

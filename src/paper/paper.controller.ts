@@ -23,15 +23,18 @@ export class PaperController {
     @CurrentUser() user,
     @Query('last_cursor') lastCursor = '',
     @Query('size') size = '10',
+    @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('roles') roles = 'resource/paper/owner,resource/paper/maintainer',
   ) {
     const roleIds = roles ? roles.split(',') : [];
-    return await this.paperService.getPapers(
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.paperService.queryPapers(
       user,
-      parseInt(lastCursor),
+      cursor,
       parseInt(size),
       order,
+      search,
       roleIds,
     );
   }
@@ -105,12 +108,15 @@ export class PaperController {
     @Param('paper') paperId: number,
     @Query('last_cursor') lastCursor = '',
     @Query('size') size = '10',
+    @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
   ) {
-    return this.paperService.getPaperMaintainers(
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return this.paperService.queryPaperMaintainers(
       paperId,
-      parseInt(lastCursor),
+      cursor,
       parseInt(size),
+      search,
       order,
     );
   }
