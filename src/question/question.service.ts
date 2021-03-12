@@ -115,6 +115,8 @@ export class QuestionService {
       size,
       {
         query,
+        cursorColumn: 'questions.id',
+        orderColumn: 'id',
         searchColumns: ['questions.content'],
         search,
         searchWithAlias: true,
