@@ -47,10 +47,11 @@ export class QuestionController {
   }
 
   @Get()
-  async getQuestions(
+  async queryQuestions(
     @CurrentUser() user,
     @Query('last_cursor') lastCursor = '',
     @Query('size') size = '10',
+    @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('categories') categoryIdsString = '',
   ) {
@@ -63,6 +64,7 @@ export class QuestionController {
       lastCursor ? parseInt(lastCursor) : null,
       parseInt(size),
       order,
+      search,
       categoryIds,
     );
   }

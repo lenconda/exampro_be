@@ -31,16 +31,27 @@ export const queryWithPagination = async <T, K>(
 
   const customWhere = _.get(query, 'where');
 
-  const baseQueryHandler = (qb: SelectQueryBuilder<K>) => {
-    if (search) {
-      qb.where((subQb) => {
-        for (const searchColumn of searchColumns) {
+  const baseQueryHandler = (qb: SelectQueryBuilder<K>, hasWhere = false) => {
+    const handleSubQb = (subQb) => {
+      for (const [index, searchColumn] of searchColumns.entries()) {
+        if (index === 0) {
+          subQb.where(`${searchColumn} LIKE :searchString`, {
+            searchString: `%${search}%`,
+          });
+        } else {
           subQb.orWhere(`${searchColumn} LIKE :searchString`, {
             searchString: `%${search}%`,
           });
         }
-        return '';
-      });
+      }
+      return '';
+    };
+    if (search) {
+      if (hasWhere) {
+        qb.andWhere(handleSubQb);
+      } else {
+        qb.where(handleSubQb);
+      }
     }
   };
 
@@ -50,15 +61,23 @@ export const queryWithPagination = async <T, K>(
       [orderColumn]: cursorOrder as 'ASC' | 'DESC',
     },
   } as FindManyOptions<K>;
+
   const countWhereQuery = {
-    where: baseQueryHandler,
+    where: (qb: SelectQueryBuilder<K>) => {
+      if (_.isFunction(customWhere)) {
+        customWhere(qb);
+      } else if (!_.isEmpty(customWhere)) {
+        // qb.where(customWhere as FindConditions<K>);
+      }
+      baseQueryHandler(qb);
+    },
   } as FindManyOptions<K>;
   const whereQuery = {
     where: (qb: SelectQueryBuilder<K>) => {
       if (_.isFunction(customWhere)) {
         customWhere(qb);
       } else {
-        qb.where(customWhere as FindConditions<K>);
+        // qb.where(customWhere as FindConditions<K>);
       }
       if (lastCursor) {
         qb.andWhere(
@@ -80,8 +99,13 @@ export const queryWithPagination = async <T, K>(
     ...takeQuery,
     ...orderQuery,
   } as FindManyOptions;
-  console.log(itemsQuery);
+  const totalQuery = {
+    ..._.omit(query, ['where']),
+    ...countWhereQuery,
+    ...orderQuery,
+  };
+
   const items = await repository.find(itemsQuery);
-  const total = await repository.count(countWhereQuery);
+  const total = await repository.count(totalQuery);
   return { items, total };
 };

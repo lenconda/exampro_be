@@ -85,6 +85,7 @@ export class QuestionService {
     lastCursor: number,
     size: number,
     order: 'asc' | 'desc',
+    search: string,
     categoryIds: number[],
   ) {
     const query: FindManyOptions<Question> =
@@ -94,19 +95,16 @@ export class QuestionService {
               alias: 'questions',
               innerJoin: {
                 categories: 'questions.categories',
+                creator: 'questions.creator',
               },
             },
             where: (qb: SelectQueryBuilder<Question>) => {
-              qb.where({
-                creator: {
-                  email: creator.email,
-                },
-              });
+              qb.andWhere('creator.email = :email', { email: creator.email });
               qb.andWhere('categories.category.id IN (:categoryId)', {
                 categoryId: categoryIds,
               });
             },
-            relations: ['choices', 'answers', 'categories'],
+            relations: ['choices', 'answers'],
           }
         : {
             where: {
@@ -121,7 +119,13 @@ export class QuestionService {
       lastCursor,
       order.toUpperCase() as 'ASC' | 'DESC',
       size,
-      { query },
+      {
+        query,
+        orderColumn: 'id',
+        cursorColumn: 'questions.id',
+        searchColumns: ['questions.content'],
+        search,
+      },
     );
   }
 
