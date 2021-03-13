@@ -80,11 +80,11 @@ export const queryWithPagination = async <T, K>(
   };
 
   const takeQuery = {} as FindManyOptions<K>;
-  const orderQuery = {
-    order: {
-      [orderColumn]: cursorOrder as 'ASC' | 'DESC',
-    },
-  } as FindManyOptions<K>;
+  const orderQuery = _.set(
+    {},
+    `order.${orderColumn}`,
+    cursorOrder as 'ASC' | 'DESC',
+  ) as FindManyOptions<K>;
 
   let itemsWhereConditions = {
     deletedAt: null,

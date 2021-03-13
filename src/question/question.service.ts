@@ -106,7 +106,6 @@ export class QuestionService {
           });
         }
       },
-      relations: ['choices', 'answers'],
     };
     return queryWithPagination<number, Question>(
       this.questionRepository,
