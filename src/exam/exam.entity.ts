@@ -26,6 +26,10 @@ export class Exam {
   @Column({ name: 'end_time', nullable: true, default: null })
   endTime: Date;
 
+  // 是否需要计算成绩
+  @Column({ default: true })
+  grades: boolean;
+
   // 考试限时，单位：分钟
   @Column({ nullable: true, default: null })
   duration: number;

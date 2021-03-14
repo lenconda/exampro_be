@@ -21,7 +21,7 @@ export class User {
   @PrimaryColumn()
   email: string;
 
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   password: string;
 
   @Column({ default: '/assets/images/default_avatar.jpg' })
