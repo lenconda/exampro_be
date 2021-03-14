@@ -31,10 +31,7 @@ export class User {
   code: string;
 
   @Column({ default: false })
-  active: boolean;
-
-  @Column({ nullable: true, name: 'active_expire', select: false })
-  activeExpire: Date;
+  verifying: boolean;
 
   @Column({ nullable: true })
   name: string;

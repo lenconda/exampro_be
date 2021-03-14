@@ -14,13 +14,12 @@ import _ from 'lodash';
 import {
   ERR_ACCOUNT_NOT_FOUND,
   ERR_EMAIL_DUPLICATED,
-  ERR_USER_INACTIVE,
+  ERR_OLD_PASSWORD_MISMATCHED,
 } from 'src/constants';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
 import { generateActiveCode } from 'src/utils/generators';
 import { MailService } from 'src/mail/mail.service';
-import { ConfigService } from 'src/config/config.service';
 import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
@@ -34,7 +33,6 @@ export class UserService {
     private readonly userRoleRepository: Repository<UserRole>,
     private readonly redisService: RedisService,
     private readonly mailService: MailService,
-    private readonly configService: ConfigService,
     private readonly authService: AuthService,
   ) {
     this.redis = redisService.getClient();
@@ -46,7 +44,6 @@ export class UserService {
     const adminUser = this.userRepository.create({
       email,
       password: md5(password),
-      active: true,
     });
     const roles = await this.roleRepository.find({
       where: roleIds.map((roleId) => ({
@@ -80,14 +77,11 @@ export class UserService {
     const userInfo = await this.userRepository.findOne({
       where: { email },
       relations: ['userRoles', 'userRoles.role'],
+      select: ['email', 'avatar', 'password', 'name'],
     });
 
     if (!userInfo) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
-    }
-
-    if (!userInfo.active) {
-      throw new ForbiddenException(ERR_USER_INACTIVE);
     }
 
     const roles = ((userInfo.userRoles || []) as UserRole[]).map(
@@ -105,6 +99,24 @@ export class UserService {
       email,
       ..._.pick(data, ['avatar', 'name']),
     });
+  }
+
+  async updateUserPassword(
+    user: User,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    if (user.password !== md5(oldPassword)) {
+      throw new ForbiddenException(ERR_OLD_PASSWORD_MISMATCHED);
+    }
+    await this.userRepository.update(
+      {
+        email: user.email,
+      },
+      {
+        password: md5(newPassword),
+      },
+    );
   }
 
   async blockUser(email: string, type: string, days: number) {
@@ -138,27 +150,32 @@ export class UserService {
 
   async changeEmail(email: string, newEmail: string) {
     if (await this.userRepository.findOne({ email: newEmail })) {
-      throw new ForbiddenException(ERR_EMAIL_DUPLICATED);
+      throw new BadRequestException(ERR_EMAIL_DUPLICATED);
     }
-    const { hostname } = this.configService.get();
     const code = generateActiveCode();
-    const link = `${hostname}/user/reset?m=${Buffer.from(email).toString(
-      'base64',
-    )}&c=${code}`;
-    const { activeCodeExpiration } = this.configService.get('security');
+    const token = this.authService.sign(newEmail);
     await this.userRepository.update(
       { email },
       {
         email: newEmail,
-        active: false,
         code,
-        activeExpire: new Date(Date.now() + activeCodeExpiration),
+        verifying: true,
       },
     );
-    await this.mailService.sendChangeEmailMail([newEmail], link);
+    await this.mailService.sendChangeEmailMail(newEmail, token);
     return {
       token: this.authService.sign(newEmail),
     };
+  }
+
+  async verifyEmail(email: string) {
+    await this.userRepository.update(
+      { email },
+      {
+        code: null,
+        verifying: false,
+      },
+    );
   }
 
   async destroy(email: string) {
@@ -174,5 +191,51 @@ export class UserService {
     await this.userRepository.delete({ email });
 
     return;
+  }
+
+  async complete(email: string, info: Record<string, any>) {
+    const userInfo = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (!userInfo) {
+      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
+    }
+    await this.userRepository.update(
+      { email },
+      {
+        ..._.pick(info, ['password', 'avatar', 'name']),
+        code: null,
+        verifying: false,
+      },
+    );
+  }
+
+  async completeRegistration(email: string, name: string, password: string) {
+    await this.complete(email, {
+      name,
+      password: md5(password),
+    });
+  }
+
+  async completeForgetPassword(email: string, password: string) {
+    await this.complete(email, {
+      password: md5(password),
+    });
+    return;
+  }
+
+  async resend(
+    email: string,
+    type: 'register' | 'reset_password' | 'verify_email',
+  ) {
+    const token = this.authService.sign(email);
+    if (type === 'register') {
+      this.mailService.sendRegisterMail([{ email, token }]);
+    } else if (type === 'reset_password') {
+      this.mailService.sendResetPasswordMail(email, token);
+    } else if (type === 'verify_email') {
+      this.mailService.sendChangeEmailMail(email, token);
+    }
+    return { token };
   }
 }

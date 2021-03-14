@@ -4,10 +4,16 @@ import {
   ExecutionContext,
   CallHandler,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
+import _ from 'lodash';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/auth/auth.service';
+import {
+  ERR_EMAIL_VERIFICATION_REQUIRED,
+  ERR_USER_PASSWORD_NOT_SET,
+} from './constants';
 
 export type Response = Record<string, any>;
 
@@ -25,6 +31,34 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
     const user = request?.user || {};
     const email = user?.email || '';
 
+    if (pathname.startsWith('/api/auth') || _.isEmpty(user) || !token) {
+      return next.handle().pipe(
+        map(async (data) => {
+          let result = data;
+          if (!result) {
+            result = { message: 'OK', data: {} };
+          }
+          if (!result.message || !result.data) {
+            result = { message: 'OK', data };
+          }
+          if (token) {
+            await this.authService.blockToken(token);
+          }
+          return result;
+        }),
+      );
+    }
+
+    const userPasswordCheckBlackList = [
+      '/api/auth/register',
+      '/api/user/complete/registration',
+      '/api/user/complete/forget_password',
+    ];
+
+    if (userPasswordCheckBlackList.indexOf(pathname) === -1 && !user.password) {
+      throw new ForbiddenException(ERR_USER_PASSWORD_NOT_SET);
+    }
+
     await this.authService.checkUserBanStatus(email);
 
     const isTokenBlocked = await this.authService.checkToken(token);
@@ -37,6 +71,10 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
      */
     if (pathname === '/api/auth/logout') {
       await this.authService.blockToken(token);
+    }
+
+    if (pathname !== '/api/user/verify_email' && Boolean(user.verifying)) {
+      throw new ForbiddenException(ERR_EMAIL_VERIFICATION_REQUIRED);
     }
 
     const additionalResponseData = {} as Record<string, any>;
@@ -63,12 +101,12 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
         if (!result.message || !result.data) {
           result = { message: 'OK', data };
         }
-        if (additionalResponseData.token) {
+        result = {
+          ...result,
+          token: additionalResponseData.token,
+        };
+        if (result.data.token) {
           await this.authService.blockToken(token);
-          result = {
-            ...result,
-            token: additionalResponseData.token,
-          };
         }
         return result;
       }),

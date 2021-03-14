@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import _ from 'lodash';
 import { MenuService } from 'src/menu/menu.service';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
@@ -55,7 +56,7 @@ export class AdminController {
   @Get('/user/:email')
   @Role('user/admin/system', 'user/admin/user')
   async getUserProfile(@Param('email') email: string) {
-    return await this.userService.getUserProfile(email);
+    return _.omit(await this.userService.getUserProfile(email), ['password']);
   }
 
   @Put('/user/:email/block')

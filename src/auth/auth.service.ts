@@ -1,29 +1,18 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from 'src/user/user.entity';
 import md5 from 'md5';
 import {
-  ERR_ACCOUNT_NOT_FOUND,
-  ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED,
-  ERR_ACCOUNT_STATUS_INVALID,
-  ERR_ACTIVE_CODE_EXPIRED,
-  ERR_ACTIVE_CODE_INVALID,
   ERR_AUTHENTICATION_FAILED,
-  ERR_BODY_EMAIL_REQUIRED,
-  ERR_BODY_PASSWORD_REQUIRED,
+  ERR_EMAIL_VERIFICATION_REQUIRED,
   ERR_USER_BANNED,
-  ERR_USER_INACTIVE,
+  ERR_USER_PASSWORD_NOT_SET,
 } from 'src/constants';
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 import { generateActiveCode } from 'src/utils/generators';
-import { ConfigService } from 'src/config/config.service';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
 import { MailService } from 'src/mail/mail.service';
@@ -40,7 +29,6 @@ export class AuthService {
     private readonly userRoleRepository: Repository<UserRole>,
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>,
-    private readonly configService: ConfigService,
     private readonly redisService: RedisService,
   ) {
     this.redis = redisService.getClient();
@@ -71,26 +59,25 @@ export class AuthService {
     throw new ForbiddenException(`${ERR_USER_BANNED}::${code}::${ttl}`);
   }
 
-  /**
-   * validate user
-   * @param email email
-   * @param password password
-   */
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string = null) {
     await this.checkUserBanStatus(email);
 
     const user = await this.userRepository.findOne({
       email,
-      password: md5(password),
+      password: password ? md5(password) : null,
     });
+
+    if (_.isNull(password) && user) {
+      throw new ForbiddenException(ERR_USER_PASSWORD_NOT_SET);
+    }
+
+    if (user.verifying) {
+      throw new ForbiddenException(ERR_EMAIL_VERIFICATION_REQUIRED);
+    }
 
     return user;
   }
 
-  /**
-   * sign a token
-   * @param email email
-   */
   sign(email: string) {
     return this.jwtService.sign({ email });
   }
@@ -119,47 +106,10 @@ export class AuthService {
     );
   }
 
-  /**
-   * active a user account
-   * @param email email
-   * @param code code
-   */
-  async active(email: string, code: string) {
-    const user = await this.userRepository.findOne({
-      where: { email },
-      select: ['activeExpire', 'active', 'code'],
-    });
-    if (!user) {
-      throw new ForbiddenException(ERR_ACCOUNT_NOT_FOUND);
-    }
-    if (user.active) {
-      throw new BadRequestException(ERR_ACCOUNT_REPEATED_ACTIVATION_DETECTED);
-    }
-    if (Date.now() > user.activeExpire.getTime()) {
-      throw new ForbiddenException(ERR_ACTIVE_CODE_EXPIRED);
-    }
-    if (user.code !== code) {
-      throw new ForbiddenException(ERR_ACTIVE_CODE_INVALID);
-    }
-    await this.userRepository.update(
-      { email },
-      { code: null, active: true, activeExpire: null },
-    );
-    return;
-  }
-
-  /**
-   * login
-   * @param email email
-   * @param password password
-   */
-  async login(email: string, password: string) {
+  async login(email: string, password: string = null) {
     const result = await this.validateUser(email, password);
     if (!result) {
       throw new ForbiddenException(ERR_AUTHENTICATION_FAILED);
-    }
-    if (!result.active) {
-      throw new ForbiddenException(ERR_USER_INACTIVE);
     }
     return {
       token: this.sign(email),
@@ -170,109 +120,51 @@ export class AuthService {
     return { redirect };
   }
 
-  async createUser(email: string, password: string, code: string, exp: number) {
-    const user = this.userRepository.create({
-      email,
-      password: md5(password),
-      avatar: '/assets/images/default_avatar.jpg',
-      code,
-      activeExpire: new Date(Date.now() + exp),
+  async register(emails: string[]) {
+    const existedEmails = (
+      await this.userRepository.find({
+        where: { email: In(emails) },
+      })
+    ).map((user) => user.email);
+    const insertedEmails = _.difference(emails, existedEmails);
+    const items = insertedEmails.map((email) => {
+      return {
+        email,
+        token: this.sign(email),
+      };
     });
-    await this.userRepository.insert(user);
-    return user;
-  }
-
-  /**
-   * register
-   * @param email email
-   * @param password password
-   */
-  async register(email: string, password: string) {
-    if (!email) {
-      throw new ForbiddenException(ERR_BODY_EMAIL_REQUIRED);
-    }
-    if (!password) {
-      throw new ForbiddenException(ERR_BODY_PASSWORD_REQUIRED);
-    }
-    const { activeCodeExpiration } = this.configService.get('security') as {
-      activeCodeExpiration: number;
-    };
-    const { hostname } = this.configService.get();
-    const code = generateActiveCode();
-    const link = `${hostname}/user/active?m=${Buffer.from(email).toString(
-      'base64',
-    )}&c=${code}`;
-    await this.mailService.sendRegisterMail([email], link);
-    const user = await this.createUser(
-      email,
-      password,
-      code,
-      activeCodeExpiration,
-    );
+    const users = [];
+    const userRoles = [];
     const role = await this.roleRepository.findOne({ id: 'user/normal' });
-    const userRole = this.userRoleRepository.create({ user, role });
-    await this.userRoleRepository.save(userRole);
-    return {
-      token: this.sign(email),
-    };
+    for (const email of insertedEmails) {
+      const code = generateActiveCode();
+      const user = this.userRepository.create({
+        email,
+        code,
+        avatar: '/assets/images/default_avatar.jpg',
+      });
+      users.push(user);
+      userRoles.push(this.userRoleRepository.create({ user, role }));
+    }
+    await this.mailService.sendRegisterMail(items);
+    await this.userRepository.save(users);
+    await this.userRoleRepository.save(userRoles);
+    return;
   }
 
-  /**
-   * forget password
-   * @param email email
-   */
   async forgetPassword(email: string) {
     const userInfo = await this.userRepository.findOne({ email });
     if (!userInfo) {
       return {};
     }
-    const { hostname } = this.configService.get();
-    const { activeCodeExpiration } = this.configService.get('security') as {
-      activeCodeExpiration: number;
-    };
+    const token = this.sign(email);
     const code = generateActiveCode();
-    const link = `${hostname}/user/reset?m=${Buffer.from(email).toString(
-      'base64',
-    )}&c=${code}`;
-    await this.mailService.sendResetPasswordMail([email], link);
+    await this.mailService.sendResetPasswordMail(email, token);
     await this.userRepository.save({
       ...userInfo,
       code,
-      active: false,
-      activeExpire: new Date(Date.now() + activeCodeExpiration),
+      password: null,
     });
     return;
-  }
-
-  /**
-   * reset password
-   * @param email
-   * @param code string
-   * @param password string
-   */
-  async resetPassword(email: string, code: string, password: string) {
-    const userInfo = await this.userRepository.findOne({
-      where: { email },
-      select: ['code', 'active', 'email'],
-    });
-    if (!userInfo) {
-      throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
-    }
-    if (userInfo.active) {
-      throw new ForbiddenException(ERR_ACCOUNT_STATUS_INVALID);
-    }
-    if (userInfo.code !== code) {
-      throw new ForbiddenException(ERR_ACTIVE_CODE_INVALID);
-    }
-    await this.userRepository.save({
-      email: userInfo.email,
-      password: md5(password),
-      code: null,
-      active: true,
-      activeExpire: null,
-    });
-    return {
-      token: this.sign(email),
-    };
   }
 }

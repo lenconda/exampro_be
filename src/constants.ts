@@ -53,6 +53,19 @@ export const ERR_QUESTION_NOT_FOUND = 'ERR_QUESTION_NOT_FOUND';
 // 试题类型不允许出现选项
 export const ERR_CHOICES_NOT_ALLOWED = 'ERR_CHOICES_NOT_ALLOWED';
 
+// 用户未设置密码
+export const ERR_USER_PASSWORD_NOT_SET = 'ERR_USER_PASSWORD_NOT_SET';
+
+// 用户已存在
+export const ERR_ACCOUNT_EXISTED = 'ERR_ACCOUNT_EXISTED';
+
+// 需要验证邮箱
+export const ERR_EMAIL_VERIFICATION_REQUIRED =
+  'ERR_EMAIL_VERIFICATION_REQUIRED';
+
+// 旧密码不匹配
+export const ERR_OLD_PASSWORD_MISMATCHED = 'ERR_OLD_PASSWORD_MISMATCHED';
+
 // =================== 封禁状态 ===================
 
 /**

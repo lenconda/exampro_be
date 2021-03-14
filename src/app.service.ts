@@ -49,7 +49,6 @@ export class AppService {
     const admin = this.userRepository.create({
       email,
       name: 'root',
-      active: true,
       password: md5(password),
     });
     await this.userRepository
