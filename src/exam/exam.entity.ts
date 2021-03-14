@@ -6,8 +6,8 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
-  JoinTable,
 } from 'typeorm';
+import { ExamUser } from './exam_user.entity';
 
 @Entity({ name: 'exams' })
 export class Exam {
@@ -17,12 +17,18 @@ export class Exam {
   @Column()
   title: string;
 
-  // @OneToMany(() => PaperQuestion, (paperQuestion) => paperQuestion.paper)
-  // @JoinTable()
-  // questions: PaperQuestion[];
+  @OneToMany(() => ExamUser, (examUser) => examUser.exam)
+  users: ExamUser[];
 
-  // @OneToMany(() => PaperUser, (paperUser) => paperUser.paper)
-  // users: PaperUser[];
+  @Column({ name: 'start_time', nullable: true, default: null })
+  startTime: Date;
+
+  @Column({ name: 'end_time', nullable: true, default: null })
+  endTime: Date;
+
+  // 考试限时，单位：分钟
+  @Column({ nullable: true, default: null })
+  duration: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

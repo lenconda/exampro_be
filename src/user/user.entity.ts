@@ -14,6 +14,7 @@ import { Question } from 'src/question/question.entity';
 import { QuestionCategory } from 'src/question/question_category.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { Paper } from 'src/paper/paper.entity';
+import { ExamUser } from 'src/exam/exam_user.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -70,4 +71,7 @@ export class User {
     (questionCategory) => questionCategory.creator,
   )
   questionCategories: QuestionCategory[];
+
+  @OneToMany(() => ExamUser, (examUser) => examUser.user)
+  exams: ExamUser[];
 }
