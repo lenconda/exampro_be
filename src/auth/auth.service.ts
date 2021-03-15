@@ -120,7 +120,7 @@ export class AuthService {
     return { redirect };
   }
 
-  async register(emails: string[]) {
+  async register(emails: string[], notify = true) {
     const existedEmails = (
       await this.userRepository.find({
         where: { email: In(emails) },
@@ -146,7 +146,9 @@ export class AuthService {
       users.push(user);
       userRoles.push(this.userRoleRepository.create({ user, role }));
     }
-    await this.mailService.sendRegisterMail(items);
+    if (notify) {
+      await this.mailService.sendRegisterMail(items);
+    }
     await this.userRepository.save(users);
     await this.userRoleRepository.save(userRoles);
     return;

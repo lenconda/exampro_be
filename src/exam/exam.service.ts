@@ -18,6 +18,8 @@ export class ExamService {
     private readonly examUserRepository: Repository<ExamUser>,
     @InjectRepository(PaperUser)
     private readonly paperUserRepository: Repository<PaperUser>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly authService: AuthService,
   ) {}
 
@@ -110,7 +112,9 @@ export class ExamService {
     if (examUser) {
       const timeUpdates = {} as Partial<Exam>;
       if (updates.start_time || _.isNull(updates.start_time)) {
-        timeUpdates.startTime = new Date(updates.start_time);
+        timeUpdates.startTime = updates.start_time
+          ? new Date(updates.start_time)
+          : null;
       }
       if (updates.end_time && Boolean(updates.end_time)) {
         timeUpdates.endTime = new Date(updates.end_time);
@@ -244,7 +248,18 @@ export class ExamService {
   }
 
   async createExamUsers(examId: number, emails: string[], type: string) {
+    const allowedTypes = ['maintainer', 'participant', 'invigilator'];
+    if (allowedTypes.indexOf(type) === -1) {
+      return;
+    }
     const roleId = `resource/exam/${type}`;
+    const registeredUserEmails = (
+      await this.userRepository.find({
+        where: {
+          email: In(emails),
+        },
+      })
+    ).map((user) => user.email);
     const existedEmails = (
       await this.examUserRepository.find({
         where: {
@@ -255,21 +270,29 @@ export class ExamService {
             email: In(emails),
           },
           role: {
-            id: roleId,
+            id:
+              type === 'participant'
+                ? In(allowedTypes.map((type) => `resource/exam/${type}`))
+                : roleId,
           },
         },
         relations: ['user'],
       })
     ).map((maintainer) => maintainer.user.email);
-    let insertEmails = _.difference(emails, existedEmails);
-    if (type === 'participant') {
-      const unregisteredEmails = _.difference(emails, insertEmails);
-      await this.authService.register(unregisteredEmails);
-      insertEmails = insertEmails.concat(unregisteredEmails);
+
+    let insertedEmails = [];
+    let unregisteredEmails = [];
+
+    if (type !== 'participant') {
+      insertedEmails = _.difference(registeredUserEmails, existedEmails);
+    } else {
+      insertedEmails = _.difference(emails, existedEmails);
+      unregisteredEmails = _.difference(insertedEmails, registeredUserEmails);
+      await this.authService.register(unregisteredEmails, false);
     }
-    if (insertEmails.length > 0) {
+    if (insertedEmails.length > 0) {
       await this.examUserRepository.save(
-        insertEmails.map((email) => {
+        insertedEmails.map((email) => {
           return this.examUserRepository.create({
             user: { email },
             exam: {

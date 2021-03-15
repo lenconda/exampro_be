@@ -42,6 +42,15 @@ export class ExamController {
     );
   }
 
+  @Post('/:exam/:type')
+  async createExamUsers(
+    @Param('exam') examId: number,
+    @Param('type') type: string,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.createExamUsers(examId, emails, type);
+  }
+
   @Patch('/:exam')
   async updateExam(
     @CurrentUser() user: User,
