@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   Patch,
   Post,
   Query,
@@ -95,17 +94,9 @@ export class UserController {
     return await this.userService.completeForgetPassword(user.email, password);
   }
 
-  @Post('/resend/:type')
-  async resend(@CurrentUser() user: User, @Param('type') type: string) {
-    return await this.userService.resend(
-      user.email,
-      type as 'register' | 'reset_password' | 'verify_email',
-    );
-  }
-
-  @Post('/verify_email')
-  async verify(@CurrentUser() user: User) {
-    return await this.userService.verifyEmail(user.email);
+  @Post('/complete/change_email')
+  async completeChangeEmail(@CurrentUser() user: User) {
+    return await this.userService.completeChangeEmail(user.email);
   }
 
   @Delete()

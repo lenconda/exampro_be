@@ -167,4 +167,35 @@ export class AuthService {
     });
     return;
   }
+
+  async resend(email: string, type: string) {
+    const token = this.sign(email);
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['password'],
+    });
+    switch (type) {
+      case 'register': {
+        if (!user.password) {
+          this.mailService.sendRegisterMail([{ email, token }]);
+        }
+        break;
+      }
+      case 'reset_password': {
+        if (!user.password) {
+          this.mailService.sendResetPasswordMail(email, token);
+        }
+        break;
+      }
+      case 'change_email': {
+        if (user.verifying) {
+          this.mailService.sendChangeEmailMail(email, token);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    return;
+  }
 }

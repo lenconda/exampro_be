@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('/api/auth')
@@ -26,5 +26,10 @@ export class AuthController {
   @Post('/forget_password')
   async forgetPassword(@Body('email') email: string) {
     return await this.authService.forgetPassword(email);
+  }
+
+  @Post('/resend/:email/:type')
+  async resend(@Param('email') email: string, @Param('type') type: string) {
+    return await this.authService.resend(email, type);
   }
 }

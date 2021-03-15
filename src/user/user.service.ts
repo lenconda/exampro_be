@@ -168,7 +168,7 @@ export class UserService {
     };
   }
 
-  async verifyEmail(email: string) {
+  async completeChangeEmail(email: string) {
     await this.userRepository.update(
       { email },
       {
@@ -222,20 +222,5 @@ export class UserService {
       password: md5(password),
     });
     return;
-  }
-
-  async resend(
-    email: string,
-    type: 'register' | 'reset_password' | 'verify_email',
-  ) {
-    const token = this.authService.sign(email);
-    if (type === 'register') {
-      this.mailService.sendRegisterMail([{ email, token }]);
-    } else if (type === 'reset_password') {
-      this.mailService.sendResetPasswordMail(email, token);
-    } else if (type === 'verify_email') {
-      this.mailService.sendChangeEmailMail(email, token);
-    }
-    return { token };
   }
 }
