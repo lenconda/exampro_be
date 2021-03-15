@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import { AuthService } from 'src/auth/auth.service';
+import { MailService } from 'src/mail/mail.service';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { User } from 'src/user/user.entity';
 import { queryWithPagination } from 'src/utils/pagination';
@@ -21,6 +22,7 @@ export class ExamService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly authService: AuthService,
+    private readonly mailService: MailService,
   ) {}
 
   async createExam(creator: User, info: Record<string, any>) {
@@ -289,6 +291,23 @@ export class ExamService {
       insertedEmails = _.difference(emails, existedEmails);
       unregisteredEmails = _.difference(insertedEmails, registeredUserEmails);
       await this.authService.register(unregisteredEmails, false);
+      const exam = await this.examRepository.findOne({
+        where: {
+          id: examId,
+        },
+      });
+      if (exam.notifyParticipants || exam.public) {
+        const items = insertedEmails.map((email) => ({
+          email,
+          exam,
+          ...(unregisteredEmails.indexOf(email) !== -1
+            ? {
+                token: this.authService.sign(email),
+              }
+            : {}),
+        }));
+        await this.mailService.sendExamConfirmationMail(items);
+      }
     }
     if (insertedEmails.length > 0) {
       await this.examUserRepository.save(

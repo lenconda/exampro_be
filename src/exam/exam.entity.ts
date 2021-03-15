@@ -20,6 +20,12 @@ export class Exam {
   @Column()
   title: string;
 
+  @Column({ default: true, name: 'notify_participants' })
+  notifyParticipants: boolean;
+
+  @Column({ default: false })
+  public: boolean;
+
   @OneToMany(() => ExamUser, (examUser) => examUser.exam)
   users: ExamUser[];
 
