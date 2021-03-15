@@ -33,7 +33,7 @@ export class Exam {
   @Column({ name: 'start_time', nullable: true, default: null })
   startTime: Date;
 
-  @Column({ name: 'end_time', nullable: true, default: null })
+  @Column({ name: 'end_time', nullable: false })
   endTime: Date;
 
   // 是否需要计算成绩

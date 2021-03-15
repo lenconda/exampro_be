@@ -1,4 +1,3 @@
-import { ExamQuestion } from 'src/exam/exam_paper.entity';
 import { PaperQuestion } from 'src/paper/paper_question.entity';
 import { User } from 'src/user/user.entity';
 import {
@@ -62,9 +61,6 @@ export class Question {
   @OneToMany(() => QuestionChoice, (choice) => choice.question)
   @JoinTable()
   choices: QuestionChoice[];
-
-  @OneToMany(() => ExamQuestion, (examQuestion) => examQuestion.question)
-  exams: ExamQuestion[];
 
   @ManyToOne(() => User, (user) => user.questions, {
     onDelete: 'CASCADE',

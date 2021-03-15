@@ -1,3 +1,4 @@
+import { ExamUser } from 'src/exam/exam_user.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import {
   Entity,
@@ -36,4 +37,7 @@ export class Role {
 
   @OneToMany(() => PaperUser, (paperUser) => paperUser.role)
   paperUsers: PaperUser[];
+
+  @OneToMany(() => ExamUser, (examUser) => examUser.role)
+  examUsers: ExamUser[];
 }

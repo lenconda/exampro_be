@@ -20,9 +20,6 @@ export class ExamUser {
   @Column({ default: false })
   confirmed: boolean;
 
-  @Column()
-  code: string;
-
   @ManyToOne(() => Role, (role) => role.id, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
