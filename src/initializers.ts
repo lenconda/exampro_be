@@ -40,6 +40,7 @@ export const generateRoles = () => {
           name: 'exam',
           children: [
             { name: 'initiator' },
+            { name: 'maintainer' },
             { name: 'invigilator' },
             { name: 'participant' },
             { name: 'reviewer' },

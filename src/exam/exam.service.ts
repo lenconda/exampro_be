@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
+import { AuthService } from 'src/auth/auth.service';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { User } from 'src/user/user.entity';
-import { In, Repository } from 'typeorm';
+import { queryWithPagination } from 'src/utils/pagination';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Exam } from './exam.entity';
 import { ExamUser } from './exam_user.entity';
 
@@ -16,6 +18,7 @@ export class ExamService {
     private readonly examUserRepository: Repository<ExamUser>,
     @InjectRepository(PaperUser)
     private readonly paperUserRepository: Repository<PaperUser>,
+    private readonly authService: AuthService,
   ) {}
 
   async createExam(creator: User, info: Record<string, any>) {
@@ -85,6 +88,200 @@ export class ExamService {
     });
     const examIdsToBeDeleted = examUsers.map((examUser) => examUser.exam.id);
     await this.examRepository.delete(examIdsToBeDeleted);
+    return;
+  }
+
+  async updateExam(
+    creator: User,
+    examId: number,
+    updates: Record<string, any>,
+  ) {
+    const examUser = await this.examUserRepository.findOne({
+      user: {
+        email: creator.email,
+      },
+      exam: {
+        id: examId,
+      },
+      role: {
+        id: In(['resource/exam/initiator', 'resource/exam/maintainer']),
+      },
+    });
+    if (examUser) {
+      const timeUpdates = {} as Partial<Exam>;
+      if (updates.start_time || _.isNull(updates.start_time)) {
+        timeUpdates.startTime = new Date(updates.start_time);
+      }
+      if (updates.end_time && Boolean(updates.end_time)) {
+        timeUpdates.endTime = new Date(updates.end_time);
+      }
+      await this.examRepository.update(
+        { id: examId },
+        {
+          ..._.pick(updates, ['title', 'grades', 'duration']),
+          ...timeUpdates,
+        },
+      );
+      return;
+    }
+  }
+
+  async queryExams(
+    creator: User,
+    lastCursor: number,
+    size: number,
+    order: 'asc' | 'desc',
+    search: string,
+    roleIds: string[],
+  ) {
+    const data = await queryWithPagination<number, ExamUser>(
+      this.examUserRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        cursorColumn: 'exam.id',
+        search,
+        searchColumns: ['exam.title'],
+        query: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              exam: 'items.exam',
+              user: 'items.user',
+              role: 'items.role',
+            },
+          },
+          where: (qb: SelectQueryBuilder<ExamUser>) => {
+            qb.andWhere('user.email = :email', {
+              email: creator.email,
+            });
+            if (roleIds.length > 0) {
+              qb.andWhere('role.id IN (:roleIds)', {
+                roleIds,
+              });
+            }
+            return '';
+          },
+          relations: ['exam', 'role'],
+        },
+      },
+    );
+    return {
+      items: data.items.map((item) =>
+        _.merge(_.omit(item.exam, ['role']), { role: item.role }),
+      ),
+      total: data.total,
+    };
+  }
+
+  async transformOwnership(
+    examId: number,
+    formerOwnerEmail: string,
+    newOwnerEmail: string,
+  ) {
+    const formerOwnership = await this.examUserRepository.findOne({
+      where: {
+        exam: {
+          id: examId,
+        },
+        user: {
+          email: formerOwnerEmail,
+        },
+        role: {
+          id: 'resource/exam/initiator',
+        },
+      },
+    });
+    if (!formerOwnership) {
+      throw new BadRequestException();
+    }
+    const existedFormerMaintainerShip = await this.examUserRepository.findOne({
+      where: {
+        exam: {
+          id: examId,
+        },
+        user: {
+          email: newOwnerEmail,
+        },
+        role: {
+          id: 'resource/exam/maintainer',
+        },
+      },
+      relations: ['role'],
+    });
+    if (existedFormerMaintainerShip) {
+      existedFormerMaintainerShip.role.id = 'resource/exam/initiator';
+      await this.examUserRepository.save(existedFormerMaintainerShip);
+    } else {
+      await this.examUserRepository.save(
+        this.examUserRepository.create({
+          user: {
+            email: newOwnerEmail,
+          },
+          role: {
+            id: 'resource/exam/initiator',
+          },
+          exam: {
+            id: examId,
+          },
+        }),
+      );
+    }
+    await this.examUserRepository.update(
+      {
+        user: {
+          email: formerOwnerEmail,
+        },
+      },
+      {
+        role: {
+          id: 'resource/exam/maintainer',
+        },
+      },
+    );
+    return;
+  }
+
+  async createExamUsers(examId: number, emails: string[], type: string) {
+    const roleId = `resource/exam/${type}`;
+    const existedEmails = (
+      await this.examUserRepository.find({
+        where: {
+          exam: {
+            id: examId,
+          },
+          user: {
+            email: In(emails),
+          },
+          role: {
+            id: roleId,
+          },
+        },
+        relations: ['user'],
+      })
+    ).map((maintainer) => maintainer.user.email);
+    let insertEmails = _.difference(emails, existedEmails);
+    if (type === 'participant') {
+      const unregisteredEmails = _.difference(emails, insertEmails);
+      await this.authService.register(unregisteredEmails);
+      insertEmails = insertEmails.concat(unregisteredEmails);
+    }
+    if (insertEmails.length > 0) {
+      await this.examUserRepository.save(
+        insertEmails.map((email) => {
+          return this.examUserRepository.create({
+            user: { email },
+            exam: {
+              id: examId,
+            },
+            role: {
+              id: roleId,
+            },
+          });
+        }),
+      );
+    }
     return;
   }
 }
