@@ -250,10 +250,24 @@ export class ExamService {
   }
 
   async createExamUsers(examId: number, emails: string[], type: string) {
-    const allowedTypes = ['maintainer', 'participant', 'invigilator'];
+    const allowedTypes = [
+      'maintainer',
+      'participant',
+      'invigilator',
+      'reviewer',
+    ];
     if (allowedTypes.indexOf(type) === -1) {
       return;
     }
+    const roleIdFilter = (type: string, id: string) => {
+      if (type === 'participant') {
+        return In(allowedTypes.map((type) => `resource/exam/${type}`));
+      }
+      if (type === 'reviewer') {
+        return In(['resource/exam/reviewer', 'resource/exam/participant']);
+      }
+      return id;
+    };
     const roleId = `resource/exam/${type}`;
     const registeredUserEmails = (
       await this.userRepository.find({
@@ -272,10 +286,7 @@ export class ExamService {
             email: In(emails),
           },
           role: {
-            id:
-              type === 'participant'
-                ? In(allowedTypes.map((type) => `resource/exam/${type}`))
-                : roleId,
+            id: roleIdFilter(type, roleId),
           },
         },
         relations: ['user'],
