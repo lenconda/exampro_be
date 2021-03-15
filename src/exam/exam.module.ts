@@ -4,9 +4,10 @@ import { ExamController } from './exam.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Exam } from './exam.entity';
 import { ExamUser } from './exam_user.entity';
+import { PaperUser } from 'src/paper/paper_user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Exam, ExamUser])],
+  imports: [TypeOrmModule.forFeature([Exam, ExamUser, PaperUser])],
   providers: [ExamService],
   controllers: [ExamController],
   exports: [ExamService],

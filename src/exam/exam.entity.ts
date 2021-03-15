@@ -1,3 +1,4 @@
+import { Paper } from 'src/paper/paper.entity';
 import {
   Entity,
   CreateDateColumn,
@@ -6,6 +7,8 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ExamUser } from './exam_user.entity';
 
@@ -19,6 +22,13 @@ export class Exam {
 
   @OneToMany(() => ExamUser, (examUser) => examUser.exam)
   users: ExamUser[];
+
+  @ManyToOne(() => Paper, (paper) => paper.exams, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'paper_id' })
+  paper: Paper;
 
   @Column({ name: 'start_time', nullable: true, default: null })
   startTime: Date;

@@ -50,7 +50,6 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
     }
 
     const userPasswordCheckBlackList = [
-      '/api/auth/register',
       '/api/user/complete/registration',
       '/api/user/complete/forget_password',
     ];

@@ -1,3 +1,4 @@
+import { Exam } from 'src/exam/exam.entity';
 import {
   Entity,
   CreateDateColumn,
@@ -28,6 +29,9 @@ export class Paper {
 
   @OneToMany(() => PaperUser, (paperUser) => paperUser.paper)
   users: PaperUser[];
+
+  @OneToMany(() => Exam, (exam) => exam.paper)
+  exams: Exam[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
