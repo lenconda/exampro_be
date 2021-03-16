@@ -50,6 +50,25 @@ export class ExamService {
     return exam;
   }
 
+  async getExam(user: User, examId: number) {
+    const result = await this.examUserRepository.findOne({
+      where: {
+        user: {
+          email: user.email,
+        },
+        exam: {
+          id: examId,
+        },
+      },
+      relations: ['exam', 'role'],
+    });
+    const { exam = {}, role = {} } = result;
+    return {
+      ...exam,
+      role,
+    };
+  }
+
   async createExamPaper(creator: User, examId: number, paperId: number) {
     const paperUser = await this.paperUserRepository.findOne({
       where: {

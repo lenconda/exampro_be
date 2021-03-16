@@ -10,11 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Role } from 'src/role/role.decorator';
+import { RoleGuard } from 'src/role/role.guard';
 import { CurrentUser } from 'src/user/user.decorator';
 import { PaperService } from './paper.service';
 
 @Controller('/api/paper')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RoleGuard)
 export class PaperController {
   constructor(private readonly paperService: PaperService) {}
 
@@ -49,6 +51,7 @@ export class PaperController {
   }
 
   @Delete()
+  @Role('resource/paper/owner')
   async deletePapers(@CurrentUser() user, @Body('papers') paperIds: string[]) {
     return this.paperService.deletePapers(
       user,
@@ -57,6 +60,7 @@ export class PaperController {
   }
 
   @Post('/:paper/questions')
+  @Role('resource/paper/owner', 'resource/paper/maintainer')
   async createPaperQuestion(
     @Param('paper') paperId: number,
     @Body('question') questionId: number,
@@ -70,6 +74,7 @@ export class PaperController {
   }
 
   @Delete('/:paper/questions')
+  @Role('resource/paper/owner', 'resource/paper/maintainer')
   async deletePaperQuestions(
     @Param('paper') paperId: number,
     @Body('questions') questionIds: number[],
@@ -78,16 +83,32 @@ export class PaperController {
   }
 
   @Get('/:paper/questions')
+  @Role(
+    'resource/paper/owner',
+    'resource/paper/maintainer',
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/reviewer',
+    'resource/exam/participant',
+  )
   async getPaperQuestions(@Param('paper') paperId: number) {
     return await this.paperService.getPaperQuestions(paperId, false);
   }
 
   @Get('/:paper/questions_answers')
+  @Role(
+    'resource/paper/owner',
+    'resource/paper/maintainer',
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/reviewer',
+  )
   async getPaperQuestionsWithAnswers(@Param('paper') paperId: number) {
     return await this.paperService.getPaperQuestions(paperId, true);
   }
 
   @Post('/:paper/maintainers')
+  @Role('resource/paper/owner')
   async createPaperMaintainers(
     @Param('paper') paperId: number,
     @Body('emails') maintainerEmails: string[] = [],
@@ -96,6 +117,7 @@ export class PaperController {
   }
 
   @Delete('/:paper/maintainers')
+  @Role('resource/paper/owner')
   async deletePaperMaintainers(
     @Param('paper') paperId: number,
     @Body('emails') maintainerEmails: string[] = [],
@@ -104,6 +126,7 @@ export class PaperController {
   }
 
   @Get('/:paper/maintainers')
+  @Role('resource/paper/owner', 'resource/paper/maintainer')
   async getPaperMaintainers(
     @Param('paper') paperId: number,
     @Query('last_cursor') lastCursor = '',
@@ -122,6 +145,7 @@ export class PaperController {
   }
 
   @Patch('/:paper/owner')
+  @Role('resource/paper/owner')
   async transformOwnership(
     @Param('paper') paperId: number,
     @CurrentUser() user,
@@ -135,16 +159,26 @@ export class PaperController {
   }
 
   @Delete('/:paper')
+  @Role('resource/paper/owner')
   async deletePaper(@CurrentUser() user, @Param('paper') paperId: number) {
     return await this.paperService.deletePapers(user, [paperId]);
   }
 
   @Get('/:paper')
+  @Role(
+    'resource/paper/owner',
+    'resource/paper/maintainer',
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/reviewer',
+    'resource/exam/participant',
+  )
   async getPaper(@CurrentUser() user, @Param('paper') paperId: string) {
     return await this.paperService.getPaper(user, parseInt(paperId));
   }
 
   @Patch('/:paper')
+  @Role('resource/paper/owner', 'resource/paper/maintainer')
   async updatePaper(
     @CurrentUser() user,
     @Param('paper') paperId: string,

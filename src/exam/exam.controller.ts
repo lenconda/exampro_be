@@ -10,17 +10,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Role } from 'src/role/role.decorator';
+import { RoleGuard } from 'src/role/role.guard';
 import { CurrentUser } from 'src/user/user.decorator';
 import { User } from 'src/user/user.entity';
 import { Exam } from './exam.entity';
 import { ExamService } from './exam.service';
 
 @Controller('/api/exam')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RoleGuard)
 export class ExamController {
   constructor(private readonly examService: ExamService) {}
 
   @Post('/paper')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async createExamPaper(
     @CurrentUser() user: User,
     @Body('exam') examId: number,
@@ -29,7 +32,8 @@ export class ExamController {
     return await this.examService.createExamPaper(user, examId, paperId);
   }
 
-  @Patch('/:exam/owner')
+  @Patch('/:exam/initiator')
+  @Role('resource/exam/initiator')
   async transformOwnership(
     @Param('exam') examId: number,
     @CurrentUser() user,
@@ -43,6 +47,7 @@ export class ExamController {
   }
 
   @Post('/:exam/maintainer')
+  @Role('resource/exam/initiator')
   async createExamMaintainers(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -51,6 +56,7 @@ export class ExamController {
   }
 
   @Post('/:exam/invigilator')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async createExamInvigilators(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -63,6 +69,7 @@ export class ExamController {
   }
 
   @Post('/:exam/reviewer')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async createExamReviewers(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -71,6 +78,7 @@ export class ExamController {
   }
 
   @Post('/:exam/participant')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async createExamParticipants(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -83,6 +91,7 @@ export class ExamController {
   }
 
   @Delete('/:exam/maintainer')
+  @Role('resource/exam/initiator')
   async deleteExamMaintainers(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -91,6 +100,7 @@ export class ExamController {
   }
 
   @Delete('/:exam/invigilator')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async deleteExamInvigilators(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -103,6 +113,7 @@ export class ExamController {
   }
 
   @Delete('/:exam/reviewer')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async deleteExamReviewers(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -111,6 +122,7 @@ export class ExamController {
   }
 
   @Delete('/:exam/participant')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async deleteExamParticipants(
     @Param('exam') examId: number,
     @Body('emails') emails: string[],
@@ -123,6 +135,7 @@ export class ExamController {
   }
 
   @Get('/:exam/:type')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async queryExamUsers(
     @Param('exam') examId: number,
     @Param('type') type: string,
@@ -143,6 +156,7 @@ export class ExamController {
   }
 
   @Patch('/:exam')
+  @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async updateExam(
     @CurrentUser() user: User,
     @Param('exam') examId: number,
@@ -151,12 +165,24 @@ export class ExamController {
     return await this.examService.updateExam(user, examId, updates);
   }
 
+  @Get('/:exam')
+  @Role(
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/reviewer',
+    'resource/exam/participant',
+  )
+  async getExam(@CurrentUser() user: User, @Param('exam') examId: number) {
+    return await this.examService.getExam(user, examId);
+  }
+
   @Post()
   async createExam(@CurrentUser() user: User, @Body() info: Partial<Exam>) {
     return await this.examService.createExam(user, info);
   }
 
   @Delete()
+  @Role('resource/exam/initiator')
   async deleteExams(
     @CurrentUser() user: User,
     @Body('exams') examIds: number[],

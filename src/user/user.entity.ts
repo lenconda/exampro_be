@@ -13,7 +13,6 @@ import { UserRole } from 'src/role/user_role.entity';
 import { Question } from 'src/question/question.entity';
 import { QuestionCategory } from 'src/question/question_category.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
-import { Paper } from 'src/paper/paper.entity';
 import { ExamUser } from 'src/exam/exam_user.entity';
 
 @Entity({ name: 'users' })
@@ -49,7 +48,7 @@ export class User {
   sendedNotifications: Notification[];
 
   @OneToMany(() => PaperUser, (paperUser) => paperUser.user)
-  papers: Paper[];
+  papers: PaperUser[];
 
   @OneToMany(
     () => UserNotification,

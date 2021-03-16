@@ -67,6 +67,10 @@ export class AuthService {
       password: password ? md5(password) : null,
     });
 
+    if (!user) {
+      throw new ForbiddenException(ERR_AUTHENTICATION_FAILED);
+    }
+
     if (_.isNull(password) && user) {
       throw new ForbiddenException(ERR_USER_PASSWORD_NOT_SET);
     }

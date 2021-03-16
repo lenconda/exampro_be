@@ -73,10 +73,10 @@ export class UserService {
     );
   }
 
-  async getUserProfile(email: string) {
+  async getUserProfile(email: string, relations: string[] = []) {
     const userInfo = await this.userRepository.findOne({
       where: { email },
-      relations: ['userRoles', 'userRoles.role'],
+      relations: ['userRoles', 'userRoles.role', ...relations],
       select: ['email', 'avatar', 'password', 'name'],
     });
 
