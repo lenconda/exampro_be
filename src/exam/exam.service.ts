@@ -138,7 +138,7 @@ export class ExamService {
     size: number,
     order: 'asc' | 'desc',
     search: string,
-    roleIds: string[],
+    roleId: string,
   ) {
     const data = await queryWithPagination<number, ExamUser>(
       this.examUserRepository,
@@ -162,9 +162,9 @@ export class ExamService {
             qb.andWhere('user.email = :email', {
               email: creator.email,
             });
-            if (roleIds.length > 0) {
-              qb.andWhere('role.id IN (:roleIds)', {
-                roleIds,
+            if (roleId.length > 0) {
+              qb.andWhere('role.id = :roleId', {
+                roleId,
               });
             }
             return '';
@@ -257,7 +257,10 @@ export class ExamService {
       'reviewer',
     ];
     if (allowedTypes.indexOf(type) === -1) {
-      return;
+      return {
+        items: [],
+        total: 0,
+      };
     }
     const roleIdFilter = (type: string, id: string) => {
       if (type === 'participant') {
@@ -336,5 +339,89 @@ export class ExamService {
       );
     }
     return;
+  }
+
+  async queryExamUsers(
+    examId: number,
+    lastCursor: number,
+    size: number,
+    search: string,
+    order: 'asc' | 'desc',
+    type: string,
+  ) {
+    const allowedTypes = [
+      'maintainer',
+      'participant',
+      'invigilator',
+      'reviewer',
+    ];
+    if (allowedTypes.indexOf(type) === -1) {
+      return {
+        items: [],
+        total: 0,
+      };
+    }
+    const data = await queryWithPagination<number, ExamUser>(
+      this.examUserRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        cursorColumn: 'id',
+        search,
+        searchColumns: ['user.email', 'user.name'],
+        searchWithAlias: true,
+        query: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              exam: 'items.exam',
+              user: 'items.user',
+              role: 'items.role',
+            },
+          },
+          where: (qb: SelectQueryBuilder<ExamUser>) => {
+            qb.where('exam.id = :examId', { examId });
+            qb.andWhere('role.id = :roleId', {
+              roleId: `resource/exam/${type}`,
+            });
+          },
+          relations: ['user'],
+        },
+      },
+    );
+    return {
+      items: data.items.map((item) => item.user),
+      total: data.total,
+    };
+  }
+
+  async deleteExamUsers(examId: number, emails: string[], type: string) {
+    const allowedTypes = [
+      'maintainer',
+      'participant',
+      'invigilator',
+      'reviewer',
+    ];
+    if (allowedTypes.indexOf(type) === -1) {
+      return;
+    }
+    const roleId = `resource/exam/${type}`;
+    const examUsers = await this.examUserRepository.find({
+      exam: {
+        id: examId,
+      },
+      role: {
+        id: roleId,
+      },
+      user: {
+        email: In(emails),
+      },
+    });
+    if (examUsers.length > 0) {
+      await this.examUserRepository.delete(
+        examUsers.map((examUser) => examUser.id),
+      );
+    }
   }
 }

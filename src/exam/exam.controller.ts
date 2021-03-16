@@ -42,13 +42,104 @@ export class ExamController {
     );
   }
 
-  @Post('/:exam/:type')
-  async createExamUsers(
+  @Post('/:exam/maintainer')
+  async createExamMaintainers(
     @Param('exam') examId: number,
-    @Param('type') type: string,
     @Body('emails') emails: string[],
   ) {
-    return await this.examService.createExamUsers(examId, emails, type);
+    return await this.examService.createExamUsers(examId, emails, 'maintainer');
+  }
+
+  @Post('/:exam/invigilator')
+  async createExamInvigilators(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.createExamUsers(
+      examId,
+      emails,
+      'invigilator',
+    );
+  }
+
+  @Post('/:exam/reviewer')
+  async createExamReviewers(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.createExamUsers(examId, emails, 'reviewer');
+  }
+
+  @Post('/:exam/participant')
+  async createExamParticipants(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.createExamUsers(
+      examId,
+      emails,
+      'participant',
+    );
+  }
+
+  @Delete('/:exam/maintainer')
+  async deleteExamMaintainers(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.deleteExamUsers(examId, emails, 'maintainer');
+  }
+
+  @Delete('/:exam/invigilator')
+  async deleteExamInvigilators(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.deleteExamUsers(
+      examId,
+      emails,
+      'invigilator',
+    );
+  }
+
+  @Delete('/:exam/reviewer')
+  async deleteExamReviewers(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.deleteExamUsers(examId, emails, 'reviewer');
+  }
+
+  @Delete('/:exam/participant')
+  async deleteExamParticipants(
+    @Param('exam') examId: number,
+    @Body('emails') emails: string[],
+  ) {
+    return await this.examService.deleteExamUsers(
+      examId,
+      emails,
+      'participant',
+    );
+  }
+
+  @Get('/:exam/:type')
+  async queryExamUsers(
+    @Param('exam') examId: number,
+    @Param('type') type: string,
+    @Query('last_cursor') lastCursor = '',
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+  ) {
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.examService.queryExamUsers(
+      examId,
+      cursor,
+      size,
+      search,
+      order,
+      type,
+    );
   }
 
   @Patch('/:exam')
@@ -80,9 +171,8 @@ export class ExamController {
     @Query('size') size = '10',
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
-    @Query('roles') roles = 'resource/exam/initiator,resource/exam/maintainer',
+    @Query('role') roleId = 'resource/exam/participant',
   ) {
-    const roleIds = roles ? roles.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.examService.queryExams(
       user,
@@ -90,7 +180,7 @@ export class ExamController {
       parseInt(size),
       order,
       search,
-      roleIds,
+      roleId,
     );
   }
 }
