@@ -66,6 +66,13 @@ export const ERR_EMAIL_VERIFICATION_REQUIRED =
 // 旧密码不匹配
 export const ERR_OLD_PASSWORD_MISMATCHED = 'ERR_OLD_PASSWORD_MISMATCHED';
 
+// 不是该场考试的考生
+export const ERR_NOT_PARTICIPANT = 'ERR_NOT_PARTICIPANT';
+
+// 已确认考试，不可重复确认
+export const ERR_DUPLICATED_CONFIRMATION_PROHIBITED =
+  'ERR_DUPLICATED_CONFIRMATION_PROHIBITED';
+
 // =================== 封禁状态 ===================
 
 /**

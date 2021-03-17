@@ -32,6 +32,15 @@ export class ExamController {
     return await this.examService.createExamPaper(user, examId, paperId);
   }
 
+  @Patch('/:exam/confirm')
+  async confirmExam(
+    @CurrentUser() user: User,
+    @Param('exam') examId: number,
+    @Body('confirm') confirm: boolean = null,
+  ) {
+    return await this.examService.confirmExam(user, examId, confirm);
+  }
+
   @Patch('/:exam/initiator')
   @Role('resource/exam/initiator')
   async transformOwnership(

@@ -17,7 +17,7 @@ export class ExamUser {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: false })
+  @Column({ default: null, nullable: true })
   confirmed: boolean;
 
   @ManyToOne(() => Role, (role) => role.id, {

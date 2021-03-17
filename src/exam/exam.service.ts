@@ -1,7 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
 import { AuthService } from 'src/auth/auth.service';
+import {
+  ERR_DUPLICATED_CONFIRMATION_PROHIBITED,
+  ERR_NOT_PARTICIPANT,
+} from 'src/constants';
 import { MailService } from 'src/mail/mail.service';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { User } from 'src/user/user.entity';
@@ -48,6 +56,40 @@ export class ExamService {
     });
     await this.examUserRepository.save(examUser);
     return exam;
+  }
+
+  async confirmExam(user: User, examId: number, confirmType: boolean) {
+    const examUser = await this.examUserRepository.findOne({
+      where: {
+        user: {
+          email: user.email,
+        },
+        exam: {
+          id: examId,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+      },
+    });
+    if (!examUser) {
+      throw new ForbiddenException(ERR_NOT_PARTICIPANT);
+    }
+    if (!_.isNull(examUser.confirmed)) {
+      throw new ForbiddenException(ERR_DUPLICATED_CONFIRMATION_PROHIBITED);
+    }
+    const confirmation = {
+      confirmed: null,
+    } as Partial<ExamUser>;
+    confirmation.confirmed = confirmType;
+    if (!_.isNull(confirmation.confirmed)) {
+      await this.examUserRepository.update(
+        {
+          id: examUser.id,
+        },
+        confirmation,
+      );
+    }
   }
 
   async getExam(user: User, examId: number) {
@@ -329,7 +371,7 @@ export class ExamService {
           id: examId,
         },
       });
-      if (exam.notifyParticipants || exam.public) {
+      if (exam.notifyParticipants && !exam.public) {
         const items = insertedEmails.map((email) => ({
           email,
           exam,

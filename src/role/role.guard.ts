@@ -107,7 +107,7 @@ export class RoleGuard implements CanActivate {
               return (
                 userExam.exam.paper &&
                 (userExam.role.id === 'resource/exam/participant'
-                  ? userExam.confirmed
+                  ? Boolean(userExam.confirmed)
                   : false) &&
                 controllerRoles.indexOf(userExam.role.id) !== -1
               );
