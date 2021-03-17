@@ -1,4 +1,4 @@
-import { Question } from 'src/question/question.entity';
+import { PaperQuestion } from 'src/paper/paper_question.entity';
 import { User } from 'src/user/user.entity';
 import {
   Column,
@@ -23,14 +23,18 @@ export class ExamResult {
   @Column({ nullable: true, default: null })
   score: number;
 
-  @ManyToOne(() => Question, (question) => question.examResults, {
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'question_id' })
-  question: Question;
+  @ManyToOne(
+    () => PaperQuestion,
+    (paperQuestion) => paperQuestion.examResults,
+    {
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
+  )
+  @JoinColumn({ name: 'paper_question_id' })
+  paperQuestion: PaperQuestion;
 
-  @ManyToOne(() => User, (user) => user.exams, {
+  @ManyToOne(() => User, (user) => user.participatedExamsResults, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
   })

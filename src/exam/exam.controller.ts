@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -16,7 +17,11 @@ import { CurrentUser } from 'src/user/user.decorator';
 import { User } from 'src/user/user.entity';
 import { Exam } from './exam.entity';
 import { ExamService } from './exam.service';
-import { ExamResultService, QuestionAnswer } from './exam_result.service';
+import {
+  ExamResultService,
+  QuestionAnswer,
+  QuestionScore,
+} from './exam_result.service';
 
 @Controller('/api/exam')
 @UseGuards(AuthGuard('jwt'), RoleGuard)
@@ -39,10 +44,46 @@ export class ExamController {
   @Post('/:exam/result')
   @Role('resource/exam/participant')
   async createExamAnswer(
+    @CurrentUser() user: User,
     @Param('exam') examId: number,
     @Body('answer') answer: QuestionAnswer,
   ) {
-    return await this.examResultService.createExamAnswer(examId, answer);
+    return await this.examResultService.createExamAnswer(user, examId, answer);
+  }
+
+  @Get('/:exam/result')
+  @Role('resource/exam/participant')
+  async getExamResult(
+    @CurrentUser() user: User,
+    @Param('exam') examId: number,
+  ) {
+    return await this.examResultService.getParticipantExamResult(
+      examId,
+      user.email,
+    );
+  }
+
+  @Get('/:exam/result/:email')
+  @Role(
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/reviewer',
+  )
+  async getParticipantExamResult(
+    @Param('exam') examId: number,
+    @Param('email') email: string,
+  ) {
+    return await this.examResultService.getParticipantExamResult(examId, email);
+  }
+
+  @Put('/:exam/score/:email')
+  @Role('resource/exam/reviewer')
+  async putParticipantExamScores(
+    @Param('exam') examId: number,
+    @Param('email') email: string,
+    @Body('score') score: QuestionScore,
+  ) {
+    return await this.examResultService.putScores(examId, email, score);
   }
 
   @Patch('/:exam/confirm')

@@ -1,3 +1,4 @@
+import { ExamResult } from 'src/exam/exam_result.entity';
 import { Question } from 'src/question/question.entity';
 import {
   Column,
@@ -6,6 +7,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,6 +23,9 @@ export class PaperQuestion {
 
   @Column()
   points: number;
+
+  @OneToMany(() => ExamResult, (examResult) => examResult.paperQuestion)
+  examResults: ExamResult[];
 
   @ManyToOne(() => Question, (question) => question.papers, {
     onUpdate: 'CASCADE',
