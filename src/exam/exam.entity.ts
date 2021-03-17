@@ -20,6 +20,9 @@ export class Exam {
   @Column()
   title: string;
 
+  @Column({ default: 0 })
+  delay: number;
+
   @Column({ default: true, name: 'notify_participants' })
   notifyParticipants: boolean;
 

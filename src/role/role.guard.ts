@@ -61,6 +61,26 @@ export class RoleGuard implements CanActivate {
       return _.uniq(result);
     };
 
+    const participantChecker = (userExam: ExamUser) => {
+      if (userExam.role.id === 'resource/exam/participant') {
+        const { startTime, delay } = userExam.exam;
+        if (startTime) {
+          if (startTime.getTime() && Date.now() < startTime.getTime() + delay) {
+            return false;
+          }
+        }
+        if (userExam.confirmed) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (controllerRoles.indexOf(userExam.role.id) !== -1) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
     const checkUserRole = () => {
       const roles = (user.roles
         ? user.roles.map((role) => role.id)
@@ -86,19 +106,7 @@ export class RoleGuard implements CanActivate {
       }
       const userExams = (user.exams || []) as ExamUser[];
       const matchedExamIds = userExams
-        .filter((userExam) => {
-          if (userExam.role.id === 'resource/exam/participant') {
-            if (userExam.confirmed) {
-              return true;
-            } else {
-              return false;
-            }
-          } else if (controllerRoles.indexOf(userExam.role.id) !== -1) {
-            return true;
-          } else {
-            return false;
-          }
-        })
+        .filter(participantChecker)
         .map((userExam) => userExam.exam.id);
       if (examIds.length === 0) {
         return false;
@@ -124,19 +132,7 @@ export class RoleGuard implements CanActivate {
         .map((userPaper) => userPaper.paper.id)
         .concat(
           userExams
-            .filter((userExam) => {
-              if (userExam.role.id === 'resource/exam/participant') {
-                if (userExam.confirmed) {
-                  return true;
-                } else {
-                  return false;
-                }
-              } else if (controllerRoles.indexOf(userExam.role.id) !== -1) {
-                return true;
-              } else {
-                return false;
-              }
-            })
+            .filter(participantChecker)
             .map((userExam) => userExam.exam.paper.id),
         );
       if (paperIds.length === 0) {
