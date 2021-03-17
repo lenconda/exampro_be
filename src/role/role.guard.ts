@@ -1,13 +1,17 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import _ from 'lodash';
+import { ExamService } from 'src/exam/exam.service';
 import { ExamUser } from 'src/exam/exam_user.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { checkPatternMatchValues } from 'src/utils/checkers';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly examService: ExamService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const controllerRoles = this.reflector.get<string[]>(
@@ -69,14 +73,31 @@ export class RoleGuard implements CanActivate {
       return false;
     };
 
-    const checkExamRole = () => {
+    const checkExamRole = async () => {
       const examIds = getRequestResourceIds('exam').concat(
         getRequestResourceIds('exams'),
       );
+      if (controllerRoles.indexOf('resource/exam/participant') !== -1) {
+        const exams = await this.examService.getExams(examIds);
+        const publicExams = exams.filter((exam) => exam.public);
+        if (exams.length === publicExams.length) {
+          return true;
+        }
+      }
       const userExams = (user.exams || []) as ExamUser[];
       const matchedExamIds = userExams
         .filter((userExam) => {
-          return controllerRoles.indexOf(userExam.role.id) !== -1;
+          if (userExam.role.id === 'resource/exam/participant') {
+            if (userExam.confirmed) {
+              return true;
+            } else {
+              return false;
+            }
+          } else if (controllerRoles.indexOf(userExam.role.id) !== -1) {
+            return true;
+          } else {
+            return false;
+          }
         })
         .map((userExam) => userExam.exam.id);
       if (examIds.length === 0) {
@@ -104,13 +125,17 @@ export class RoleGuard implements CanActivate {
         .concat(
           userExams
             .filter((userExam) => {
-              return (
-                userExam.exam.paper &&
-                (userExam.role.id === 'resource/exam/participant'
-                  ? Boolean(userExam.confirmed)
-                  : false) &&
-                controllerRoles.indexOf(userExam.role.id) !== -1
-              );
+              if (userExam.role.id === 'resource/exam/participant') {
+                if (userExam.confirmed) {
+                  return true;
+                } else {
+                  return false;
+                }
+              } else if (controllerRoles.indexOf(userExam.role.id) !== -1) {
+                return true;
+              } else {
+                return false;
+              }
             })
             .map((userExam) => userExam.exam.paper.id),
         );
@@ -125,6 +150,10 @@ export class RoleGuard implements CanActivate {
       }
     };
 
-    return checkUserRole() || checkExamRole() || checkPaperRole();
+    const userRoleResult = checkUserRole();
+    const examRoleResult = await checkExamRole();
+    const paperRoleResult = checkPaperRole();
+
+    return userRoleResult || examRoleResult || paperRoleResult;
   }
 }

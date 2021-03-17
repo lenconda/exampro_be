@@ -93,6 +93,10 @@ export class ExamService {
   }
 
   async getExam(user: User, examId: number) {
+    const exam = await this.examRepository.findOne({ id: examId });
+    if (exam.public) {
+      return { exam };
+    }
     const result = await this.examUserRepository.findOne({
       where: {
         user: {
@@ -104,11 +108,19 @@ export class ExamService {
       },
       relations: ['exam', 'role'],
     });
-    const { exam = {}, role = {} } = result;
+    const { exam: examInfo = {}, role = {} } = result;
     return {
-      ...exam,
+      ...examInfo,
       role,
     };
+  }
+
+  async getExams(examIds: number[]) {
+    return await this.examRepository.find({
+      where: {
+        id: In(examIds),
+      },
+    });
   }
 
   async createExamPaper(creator: User, examId: number, paperId: number) {

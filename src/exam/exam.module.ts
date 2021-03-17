@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ExamService } from './exam.service';
 import { ExamController } from './exam.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,6 +7,7 @@ import { ExamUser } from './exam_user.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { User } from 'src/user/user.entity';
 
+@Global()
 @Module({
   imports: [TypeOrmModule.forFeature([Exam, ExamUser, PaperUser, User])],
   providers: [ExamService],

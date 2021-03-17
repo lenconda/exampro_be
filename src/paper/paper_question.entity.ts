@@ -19,6 +19,9 @@ export class PaperQuestion {
   @Column()
   order: number;
 
+  @Column()
+  points: number;
+
   @ManyToOne(() => Question, (question) => question.papers, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
