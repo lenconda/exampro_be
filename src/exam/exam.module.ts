@@ -6,12 +6,16 @@ import { Exam } from './exam.entity';
 import { ExamUser } from './exam_user.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { User } from 'src/user/user.entity';
+import { ExamResult } from './exam_result.entity';
+import { ExamResultService } from './exam_result.service';
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([Exam, ExamUser, PaperUser, User])],
-  providers: [ExamService],
+  imports: [
+    TypeOrmModule.forFeature([Exam, ExamUser, PaperUser, User, ExamResult]),
+  ],
+  providers: [ExamService, ExamResultService],
   controllers: [ExamController],
-  exports: [ExamService],
+  exports: [ExamService, ExamResultService],
 })
 export class ExamModule {}

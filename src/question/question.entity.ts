@@ -1,3 +1,4 @@
+import { ExamResult } from 'src/exam/exam_result.entity';
 import { PaperQuestion } from 'src/paper/paper_question.entity';
 import { User } from 'src/user/user.entity';
 import {
@@ -71,6 +72,9 @@ export class Question {
 
   @OneToMany(() => PaperQuestion, (paperQuestion) => paperQuestion.question)
   papers: PaperQuestion[];
+
+  @OneToMany(() => ExamResult, (examResult) => examResult.question)
+  examResults: ExamResult[];
 
   @Column({ type: 'enum', enum: QuestionTypes })
   type: string;

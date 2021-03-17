@@ -16,11 +16,15 @@ import { CurrentUser } from 'src/user/user.decorator';
 import { User } from 'src/user/user.entity';
 import { Exam } from './exam.entity';
 import { ExamService } from './exam.service';
+import { ExamResultService, QuestionAnswer } from './exam_result.service';
 
 @Controller('/api/exam')
 @UseGuards(AuthGuard('jwt'), RoleGuard)
 export class ExamController {
-  constructor(private readonly examService: ExamService) {}
+  constructor(
+    private readonly examService: ExamService,
+    private readonly examResultService: ExamResultService,
+  ) {}
 
   @Post('/paper')
   @Role('resource/exam/initiator', 'resource/exam/maintainer')
@@ -30,6 +34,15 @@ export class ExamController {
     @Body('paper') paperId: number,
   ) {
     return await this.examService.createExamPaper(user, examId, paperId);
+  }
+
+  @Post('/:exam/result')
+  @Role('resource/exam/participant')
+  async createExamAnswer(
+    @Param('exam') examId: number,
+    @Body('answer') answer: QuestionAnswer,
+  ) {
+    return await this.examResultService.createExamAnswer(examId, answer);
   }
 
   @Patch('/:exam/confirm')
