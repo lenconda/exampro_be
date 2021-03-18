@@ -62,6 +62,9 @@ export class RoleGuard implements CanActivate {
     };
 
     const participantChecker = (userExam: ExamUser) => {
+      if (userExam.exam.paper.banned) {
+        return false;
+      }
       if (controllerRoles.indexOf(userExam.role.id) === -1) {
         return false;
       }
@@ -106,7 +109,7 @@ export class RoleGuard implements CanActivate {
       if (controllerRoles.indexOf('resource/exam/participant') !== -1) {
         const exams = await this.examService.getExams(examIds);
         const publicExams = exams.filter((exam) => exam.public);
-        if (exams.length === publicExams.length) {
+        if (exams.length === publicExams.length && publicExams.length !== 0) {
           return true;
         }
       }
@@ -133,12 +136,16 @@ export class RoleGuard implements CanActivate {
       );
       const matchedPaperIds = userPapers
         .filter((userPaper) => {
-          return controllerRoles.indexOf(userPaper.role.id) !== -1;
+          return (
+            controllerRoles.indexOf(userPaper.role.id) !== -1 &&
+            !userPaper.paper.banned
+          );
         })
         .map((userPaper) => userPaper.paper.id)
         .concat(
           userExams
             .filter(participantChecker)
+            .filter((userExam) => !userExam.exam.paper.banned)
             .map((userExam) => userExam.exam.paper.id),
         );
       if (paperIds.length === 0) {

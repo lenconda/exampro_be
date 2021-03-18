@@ -1,4 +1,5 @@
 import { Paper } from 'src/paper/paper.entity';
+import { Report } from 'src/report/report.entity';
 import {
   Entity,
   CreateDateColumn,
@@ -29,16 +30,6 @@ export class Exam {
   @Column({ default: false })
   public: boolean;
 
-  @OneToMany(() => ExamUser, (examUser) => examUser.exam)
-  users: ExamUser[];
-
-  @ManyToOne(() => Paper, (paper) => paper.exams, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  @JoinColumn({ name: 'paper_id' })
-  paper: Paper;
-
   @Column({ name: 'start_time', nullable: true, default: null })
   startTime: Date;
 
@@ -52,6 +43,19 @@ export class Exam {
   // 考试限时，单位：分钟
   @Column({ nullable: true, default: null })
   duration: number;
+
+  @OneToMany(() => ExamUser, (examUser) => examUser.exam)
+  users: ExamUser[];
+
+  @ManyToOne(() => Paper, (paper) => paper.exams, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'paper_id' })
+  paper: Paper;
+
+  @OneToMany(() => Report, (report) => report.exam)
+  reports: Report[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

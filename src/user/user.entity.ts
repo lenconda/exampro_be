@@ -15,6 +15,7 @@ import { QuestionCategory } from 'src/question/question_category.entity';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { ExamUser } from 'src/exam/exam_user.entity';
 import { ExamResult } from 'src/exam/exam_result.entity';
+import { Report } from 'src/report/report.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -74,4 +75,7 @@ export class User {
 
   @OneToMany(() => ExamResult, (examResult) => examResult.participant)
   participatedExamsResults: ExamResult[];
+
+  @OneToMany(() => Report, (report) => report.user)
+  reports: Report[];
 }

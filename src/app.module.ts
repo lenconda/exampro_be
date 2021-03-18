@@ -24,6 +24,7 @@ import { QuestionModule } from './question/question.module';
 import { PaperModule } from './paper/paper.module';
 import { AppInterceptor } from './app.interceptor';
 import { ExamModule } from './exam/exam.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { ExamModule } from './exam/exam.module';
     QuestionModule,
     PaperModule,
     ExamModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [

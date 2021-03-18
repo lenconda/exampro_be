@@ -28,6 +28,9 @@ export const ERR_USER_INACTIVE = 'ERR_USER_INACTIVE';
 // 用户被封禁
 export const ERR_USER_BANNED = 'ERR_USER_BANNED';
 
+// 资源被封禁
+export const ERR_RESOURCE_BANNED = 'ERR_RESOURCE_BANNED';
+
 // 用户邮箱已占用
 export const ERR_EMAIL_DUPLICATED = 'ERR_EMAIL_DUPLICATED';
 

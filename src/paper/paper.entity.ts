@@ -1,4 +1,5 @@
 import { Exam } from 'src/exam/exam.entity';
+import { Report } from 'src/report/report.entity';
 import {
   Entity,
   CreateDateColumn,
@@ -23,6 +24,9 @@ export class Paper {
   @Column()
   title: string;
 
+  @Column({ default: false })
+  banned: boolean;
+
   @OneToMany(() => PaperQuestion, (paperQuestion) => paperQuestion.paper)
   @JoinTable()
   questions: PaperQuestion[];
@@ -32,6 +36,9 @@ export class Paper {
 
   @OneToMany(() => Exam, (exam) => exam.paper)
   exams: Exam[];
+
+  @OneToMany(() => Report, (report) => report.paper)
+  reports: Report[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
