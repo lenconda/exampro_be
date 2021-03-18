@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import _ from 'lodash';
 import { MenuService } from 'src/menu/menu.service';
+import { ReportService } from 'src/report/report.service';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
 import { RoleService } from 'src/role/role.service';
@@ -25,6 +26,7 @@ export class AdminController {
     private readonly userService: UserService,
     private readonly menuService: MenuService,
     private readonly roleService: RoleService,
+    private readonly reportService: ReportService,
   ) {}
 
   @Post()
@@ -201,5 +203,25 @@ export class AdminController {
   @Role('user/admin/system', 'user/admin/role')
   async deleteRoles(@Body('id') ids: string[] = []) {
     return await this.roleService.deleteRoles(ids);
+  }
+
+  @Get('/report')
+  @Role('user/admin/system', 'user/admin/report')
+  async queryAllReports(
+    @Query('last_cursor') lastCursor = '',
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('types') types = '',
+  ) {
+    const typeIds = types ? types.split(',') : [];
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.reportService.queryReportedReports(
+      cursor,
+      size,
+      order,
+      search,
+      typeIds,
+    );
   }
 }

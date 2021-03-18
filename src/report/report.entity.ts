@@ -20,12 +20,24 @@ export class Report {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'enum', enum: ['committed', 'accepted', 'denied'] })
+  @Column({
+    type: 'enum',
+    enum: ['committed', 'accepted', 'denied'],
+    default: 'committed',
+  })
   status: ReportStatus;
+
+  @ManyToOne(() => User, (user) => user.reportedReports, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'reporter_id' })
+  reporter: User;
 
   @ManyToOne(() => User, (user) => user.reports, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
+    nullable: true,
   })
   @JoinColumn({ name: 'user_email' })
   user: User;
@@ -33,6 +45,7 @@ export class Report {
   @ManyToOne(() => Exam, (exam) => exam.reports, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
+    nullable: true,
   })
   @JoinColumn({ name: 'exam_id' })
   exam: Exam;
@@ -40,6 +53,7 @@ export class Report {
   @ManyToOne(() => Paper, (paper) => paper.reports, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
+    nullable: true,
   })
   @JoinColumn({ name: 'paper_id' })
   paper: Paper;

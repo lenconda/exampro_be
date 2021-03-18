@@ -78,4 +78,7 @@ export class User {
 
   @OneToMany(() => Report, (report) => report.user)
   reports: Report[];
+
+  @OneToMany(() => Report, (report) => report.reporter)
+  reportedReports: Report[];
 }

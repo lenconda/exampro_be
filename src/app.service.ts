@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role } from './role/role.entity';
-import { generateRoles } from './initializers';
+import { generateReportTypes, generateRoles } from './initializers';
 import { parseRolesTree } from './utils/parsers';
 import { User } from './user/user.entity';
 import { UserRole } from './role/user_role.entity';
 import md5 from 'md5';
 import { ConfigService } from './config/config.service';
-import { AdminService } from './admin/admin.service';
+import { ReportType } from './report/report_type.entity';
+import _ from 'lodash';
 
 @Injectable()
 export class AppService {
@@ -19,8 +20,9 @@ export class AppService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
+    @InjectRepository(ReportType)
+    private readonly reportTypeRepository: Repository<ReportType>,
     private readonly configService: ConfigService,
-    private readonly adminService: AdminService,
   ) {
     this.initializer();
   }
@@ -28,6 +30,7 @@ export class AppService {
   private async initializer() {
     await this.initializeRoles();
     await this.initializeRootAdmin();
+    await this.initializeReportTypes();
   }
 
   private async initializeRoles() {
@@ -66,5 +69,23 @@ export class AppService {
         roles.map((role) => ({ role, user: admin })),
       );
     } catch {}
+  }
+
+  private async initializeReportTypes() {
+    const typeIds = generateReportTypes();
+    const existedTypeIds = (
+      await this.reportTypeRepository.find({
+        where: {
+          id: In(typeIds),
+        },
+      })
+    ).map((type) => type.id);
+    const insertedTypeIds = _.difference(typeIds, existedTypeIds);
+    const reportTypes = insertedTypeIds.map((typeId) => {
+      return this.reportTypeRepository.create({
+        id: typeId,
+      });
+    });
+    await this.reportTypeRepository.save(reportTypes);
   }
 }

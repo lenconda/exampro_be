@@ -25,6 +25,7 @@ import { PaperModule } from './paper/paper.module';
 import { AppInterceptor } from './app.interceptor';
 import { ExamModule } from './exam/exam.module';
 import { ReportModule } from './report/report.module';
+import { ReportType } from './report/report_type.entity';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { ReportModule } from './report/report.module';
       },
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Role, User, UserRole]),
+    TypeOrmModule.forFeature([Role, User, UserRole, ReportType]),
     RedisModule.forRootAsync({
       useFactory: async (config: ConfigService) => config.get('redis'),
       inject: [ConfigService],
