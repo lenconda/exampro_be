@@ -62,19 +62,25 @@ export class RoleGuard implements CanActivate {
     };
 
     const participantChecker = (userExam: ExamUser) => {
+      if (controllerRoles.indexOf(userExam.role.id) === -1) {
+        return false;
+      }
       if (userExam.role.id === 'resource/exam/participant') {
         const { startTime, delay } = userExam.exam;
-        if (startTime) {
-          if (startTime.getTime() && Date.now() < startTime.getTime() + delay) {
-            return false;
-          }
+        if (
+          startTime &&
+          startTime.getTime() &&
+          Date.now() < startTime.getTime() + delay
+        ) {
+          return false;
         }
         if (userExam.confirmed) {
           return true;
         } else {
           return false;
         }
-      } else if (controllerRoles.indexOf(userExam.role.id) !== -1) {
+      }
+      if (controllerRoles.indexOf(userExam.role.id) !== -1) {
         return true;
       } else {
         return false;
@@ -104,13 +110,13 @@ export class RoleGuard implements CanActivate {
           return true;
         }
       }
+      if (examIds.length === 0) {
+        return false;
+      }
       const userExams = (user.exams || []) as ExamUser[];
       const matchedExamIds = userExams
         .filter(participantChecker)
         .map((userExam) => userExam.exam.id);
-      if (examIds.length === 0) {
-        return false;
-      }
       for (const examId of examIds) {
         if (matchedExamIds.indexOf(examId) === -1) {
           return false;

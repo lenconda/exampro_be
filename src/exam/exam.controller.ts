@@ -63,6 +63,16 @@ export class ExamController {
     );
   }
 
+  @Get('/:exam/results')
+  @Role(
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/reviewer',
+  )
+  async getExamResults(@Param('exam') examId: number) {
+    return await this.examResultService.getScoresList(examId);
+  }
+
   @Get('/:exam/result/:email')
   @Role(
     'resource/exam/initiator',

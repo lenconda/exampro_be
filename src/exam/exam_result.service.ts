@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import _ from 'lodash';
+import { PaperQuestion } from 'src/paper/paper_question.entity';
 import { User } from 'src/user/user.entity';
 import { In, Repository } from 'typeorm';
 import { Exam } from './exam.entity';
@@ -16,6 +17,8 @@ export class ExamResultService {
     private readonly examRepository: Repository<Exam>,
     @InjectRepository(ExamResult)
     private readonly examResultRepository: Repository<ExamResult>,
+    @InjectRepository(PaperQuestion)
+    private readonly paperQuestionRepository: Repository<PaperQuestion>,
   ) {}
 
   async createExamAnswer(
@@ -36,7 +39,30 @@ export class ExamResultService {
     if (existedExamResults.length > 0) {
       return;
     }
-    const exam = await this.examRepository.findOne({ id: examId });
+    const exam = await this.examRepository.findOne({
+      where: {
+        id: examId,
+      },
+      relations: ['paper'],
+    });
+    const paperQuestions = await this.paperQuestionRepository.find({
+      where: {
+        paper: {
+          id: exam.paper.id,
+        },
+        question: {
+          id: In(Object.keys(questionAnswer).map((key) => parseInt(key))),
+        },
+      },
+      relations: ['question'],
+    });
+    const questionToPaperQuestionMap = paperQuestions.reduce(
+      (result, paperQuestion) => {
+        result[paperQuestion.question.id] = paperQuestion.id;
+        return result;
+      },
+      {},
+    );
     const currentTimestamp = Date.now();
     const endTimestamp = exam.endTime.getTime();
     if (currentTimestamp > endTimestamp) {
@@ -53,9 +79,7 @@ export class ExamResultService {
         const currentExamResults = contents.map((content) => {
           return this.examResultRepository.create({
             paperQuestion: {
-              question: {
-                id: questionId,
-              },
+              id: questionToPaperQuestionMap[questionId],
             },
             content,
             exam: {
@@ -82,7 +106,12 @@ export class ExamResultService {
           email,
         },
       },
-      relations: ['exam', 'participant', 'question'],
+      relations: [
+        'exam',
+        'participant',
+        'paperQuestion',
+        'paperQuestion.question',
+      ],
     });
     return items.reduce((result, currentItem) => {
       const currentQuestionId = currentItem.paperQuestion.question.id.toString();
@@ -104,6 +133,34 @@ export class ExamResultService {
   }
 
   async putScores(examId: number, email: string, score: QuestionScore) {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['paper'],
+    });
+    if (!exam) {
+      return;
+    }
+    const paperQuestions = await this.paperQuestionRepository.find({
+      where: {
+        paper: {
+          id: exam.paper.id,
+        },
+        question: {
+          id: In(Object.keys(score).map((key) => parseInt(key))),
+        },
+      },
+      relations: ['question'],
+    });
+    if (paperQuestions.length === 0) {
+      return;
+    }
+    const questionToPaperQuestionMap = paperQuestions.reduce(
+      (result, paperQuestion) => {
+        result[paperQuestion.question.id] = paperQuestion.id;
+        return result;
+      },
+      {},
+    );
     const items = await this.examResultRepository.find({
       where: {
         exam: {
@@ -112,10 +169,15 @@ export class ExamResultService {
         participant: {
           email,
         },
-        question: {
-          id: In(Object.keys(score).map((score) => parseInt(score))),
+        paperQuestion: {
+          id: In(
+            Object.keys(score).map(
+              (questionId) => questionToPaperQuestionMap[questionId],
+            ),
+          ),
         },
       },
+      relations: ['paperQuestion', 'paperQuestion.question'],
     });
     for (const item of items) {
       let currentScore = score[item.paperQuestion.question.id];
@@ -133,5 +195,50 @@ export class ExamResultService {
       }
     }
     await this.examResultRepository.save(items);
+  }
+
+  async getScoresList(examId: number) {
+    const resultMap = {};
+    const items = await this.examResultRepository.find({
+      where: {
+        id: examId,
+      },
+      relations: [
+        'participant',
+        'paperQuestion',
+        'paperQuestion.question',
+        'paperQuestion.question.choices',
+      ],
+    });
+    for (const item of items) {
+      const { email } = item.participant;
+      if (!resultMap[email]) {
+        resultMap[email] = {};
+      }
+      if (!resultMap[email][item.paperQuestion.question.id]) {
+        resultMap[email][item.paperQuestion.question.id] = {
+          score: item.score,
+          paperQuestion: item.paperQuestion,
+        };
+      }
+    }
+    const result = Object.keys(resultMap).map((email) => {
+      const questionScoresMap = resultMap[email];
+      const questionScoreItems = Object.keys(questionScoresMap).map(
+        (questionId) => questionScoresMap[questionId],
+      );
+      const sortedScores = _.sortBy(
+        questionScoreItems,
+        (item) => item.paperQuestion.order,
+      ).map((item) => ({
+        score: item.score,
+        question: item.paperQuestion.question,
+      }));
+      return {
+        email,
+        scores: sortedScores,
+      };
+    });
+    return { items: result };
   }
 }
