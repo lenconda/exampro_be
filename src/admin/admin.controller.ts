@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import _ from 'lodash';
 import { MenuService } from 'src/menu/menu.service';
+import { ReportStatus } from 'src/report/report.entity';
 import { ReportService } from 'src/report/report.service';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
@@ -223,5 +224,14 @@ export class AdminController {
       search,
       typeIds,
     );
+  }
+
+  @Patch('/report')
+  @Role('user/admin/system', 'user/admin/report')
+  async updateReportStatus(
+    @Body('reports') reportIds: number[],
+    @Body('status') status: ReportStatus,
+  ) {
+    return await this.reportService.updateReportStatus(reportIds, status);
   }
 }

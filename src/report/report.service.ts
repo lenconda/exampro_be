@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { User } from 'src/user/user.entity';
 import { queryWithPagination } from 'src/utils/pagination';
 import { In, Repository } from 'typeorm';
-import { Report } from './report.entity';
+import { Report, ReportStatus } from './report.entity';
 import { ReportType } from './report_type.entity';
 
 @Injectable()
@@ -80,5 +80,17 @@ export class ReportService {
       },
     );
     return result;
+  }
+
+  async updateReportStatus(reportIds: number[], status: ReportStatus) {
+    if (status !== 'denied' && status !== 'accepted') {
+      return;
+    }
+    await this.reportRepository.update(
+      { id: In(reportIds) },
+      {
+        status,
+      },
+    );
   }
 }
