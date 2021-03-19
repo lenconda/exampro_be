@@ -59,7 +59,7 @@ export class UserService {
     return adminUser;
   }
 
-  async queryUsers<T>(lastCursor: T, size = -1, order = 'asc', search = '') {
+  async queryUsers<T>(lastCursor: T, size = 10, order = 'asc', search = '') {
     return await queryWithPagination<T, User>(
       this.userRepository,
       lastCursor,

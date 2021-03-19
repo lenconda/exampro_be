@@ -45,14 +45,14 @@ export class AdminController {
   @Get('/user')
   @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async queryUsers(
-    @Query('last_cursor') lastCursor = '',
+    @Query('last_cursor') lastCursor = null,
     @Query('search') search = '',
-    @Query('size') size = '-1',
+    @Query('size') size = 10,
     @Query('order') order = 'asc',
   ) {
     return await this.userService.queryUsers<string>(
       lastCursor,
-      parseInt(size),
+      size,
       order,
       search,
     );
@@ -172,6 +172,24 @@ export class AdminController {
     return await this.roleService.revokeUserRoles(userEmails, roleIds);
   }
 
+  @Get('/role/:role/user')
+  @Role('user/admin/system', 'user/admin/role')
+  async queryRoleUsers(
+    @Param('role') roleId: string,
+    @Query('last_cursor') lastCursor = null,
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ) {
+    return await this.roleService.queryRoleUsers(
+      lastCursor,
+      size,
+      order,
+      search,
+      roleId,
+    );
+  }
+
   @Post('/role/menu')
   @Role('user/admin/system', 'user/admin/role')
   async grantMenuRoles(
@@ -238,16 +256,13 @@ export class AdminController {
   }
 
   @Put('/paper/block')
-  @Role('user/admin/system', 'user/admin/report')
-  async blockPaper(
-    @Param('paper') paperId: number,
-    @Body('papers') paperIds: number[],
-  ) {
+  @Role('user/admin/system', 'user/admin/report', 'user/admin/resource')
+  async blockPaper(@Body('papers') paperIds: number[]) {
     return await this.paperService.blockPaper(paperIds);
   }
 
   @Put('/paper/unblock')
-  @Role('user/admin/system', 'user/admin/report')
+  @Role('user/admin/system', 'user/admin/report', 'user/admin/resource')
   async unblockPaper(
     @Param('paper') paperId: number,
     @Body('papers') paperIds: number[],

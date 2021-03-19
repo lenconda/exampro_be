@@ -8,6 +8,7 @@ import { UserRole } from './user_role.entity';
 import { MenuRole } from './menu_role.entity';
 import { User } from 'src/user/user.entity';
 import { Menu } from 'src/menu/menu.entity';
+import { queryWithPagination } from 'src/utils/pagination';
 
 export interface RoleTreeItem {
   id: string;
@@ -123,6 +124,43 @@ export class RoleService {
     }
     await this.userRoleRepository.delete(deletes);
     return { items: deletes };
+  }
+
+  async queryRoleUsers(
+    lastCursor: string,
+    size: number,
+    order: 'asc' | 'desc',
+    search: string,
+    roleId: string,
+  ) {
+    const data = await queryWithPagination<string, UserRole>(
+      this.userRoleRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        search,
+        searchColumns: ['user.email', 'user.name'],
+        query: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              user: 'items.user',
+            },
+          },
+          where: {
+            role: {
+              id: roleId,
+            },
+          },
+          relations: ['user'],
+        },
+      },
+    );
+    return {
+      total: data.total,
+      items: data.items.map((item) => item.user),
+    };
   }
 
   async grantMenuRoles(menuIds: number[], roleIds: string[]) {
