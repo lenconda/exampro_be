@@ -379,4 +379,12 @@ export class PaperService {
     );
     return;
   }
+
+  async blockPaper(paperIds: number[]) {
+    await this.paperRepository.update({ id: In(paperIds) }, { banned: true });
+  }
+
+  async unblockPaper(paperIds: number[]) {
+    await this.paperRepository.update({ id: In(paperIds) }, { banned: false });
+  }
 }

@@ -4,9 +4,10 @@ import { AdminController } from './admin.controller';
 import { MenuModule } from 'src/menu/menu.module';
 import { RoleModule } from 'src/role/role.module';
 import { ReportModule } from 'src/report/report.module';
+import { PaperModule } from 'src/paper/paper.module';
 
 @Module({
-  imports: [MenuModule, RoleModule, ReportModule],
+  imports: [MenuModule, RoleModule, ReportModule, PaperModule],
   providers: [AdminService],
   controllers: [AdminController],
   exports: [AdminService],

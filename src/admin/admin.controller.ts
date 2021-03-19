@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import _ from 'lodash';
 import { MenuService } from 'src/menu/menu.service';
+import { PaperService } from 'src/paper/paper.service';
 import { ReportStatus } from 'src/report/report.entity';
 import { ReportService } from 'src/report/report.service';
 import { Role } from 'src/role/role.decorator';
@@ -28,6 +29,7 @@ export class AdminController {
     private readonly menuService: MenuService,
     private readonly roleService: RoleService,
     private readonly reportService: ReportService,
+    private readonly paperService: PaperService,
   ) {}
 
   @Post()
@@ -233,5 +235,23 @@ export class AdminController {
     @Body('status') status: ReportStatus,
   ) {
     return await this.reportService.updateReportStatus(reportIds, status);
+  }
+
+  @Put('/paper/block')
+  @Role('user/admin/system', 'user/admin/report')
+  async blockPaper(
+    @Param('paper') paperId: number,
+    @Body('papers') paperIds: number[],
+  ) {
+    return await this.paperService.blockPaper(paperIds);
+  }
+
+  @Put('/paper/unblock')
+  @Role('user/admin/system', 'user/admin/report')
+  async unblockPaper(
+    @Param('paper') paperId: number,
+    @Body('papers') paperIds: number[],
+  ) {
+    return await this.paperService.unblockPaper(paperIds);
   }
 }
