@@ -140,6 +140,7 @@ export class RoleService {
       size,
       {
         search,
+        cursorColumn: 'user.email',
         searchColumns: ['user.email', 'user.name'],
         query: {
           join: {
@@ -197,5 +198,43 @@ export class RoleService {
     }
     await this.menuRoleRepository.delete(deletes);
     return { items: deletes };
+  }
+
+  async queryRoleMenus(
+    lastCursor: number,
+    size: number,
+    order: 'asc' | 'desc',
+    search: string,
+    roleId: string,
+  ) {
+    const data = await queryWithPagination<number, MenuRole>(
+      this.menuRoleRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        search,
+        searchColumns: ['menu.pathname', 'menu.title'],
+        cursorColumn: 'menu.id',
+        query: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              menu: 'items.menu',
+            },
+          },
+          where: {
+            role: {
+              id: roleId,
+            },
+          },
+          relations: ['menu'],
+        },
+      },
+    );
+    return {
+      total: data.total,
+      items: data.items.map((item) => item.menu),
+    };
   }
 }

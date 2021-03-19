@@ -208,6 +208,25 @@ export class AdminController {
     return await this.roleService.revokeMenuRoles(menuIds, roleIds);
   }
 
+  @Get('/role/:role/menu')
+  @Role('user/admin/system', 'user/admin/role')
+  async queryRoleMenus(
+    @Param('role') roleId: string,
+    @Query('last_cursor') lastCursor = null,
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ) {
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.roleService.queryRoleMenus(
+      cursor,
+      size,
+      order,
+      search,
+      roleId,
+    );
+  }
+
   @Patch('/role/:id')
   @Role('user/admin/system', 'user/admin/role')
   async updateRole(@Param('id') id: string, @Body() updates = {}) {
