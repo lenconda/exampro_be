@@ -49,6 +49,12 @@ export class MenuService {
           cursorColumn: 'menu.id',
           orderColumn: 'menu.id',
           query: {
+            join: {
+              alias: 'items',
+              leftJoin: {
+                menu: 'items.menu',
+              },
+            },
             where: { role },
             relations: ['menu'],
           },
@@ -64,9 +70,6 @@ export class MenuService {
         lastCursor,
         queryOrder,
         size,
-        {
-          cursorColumn: 'id',
-        },
       );
     }
   }

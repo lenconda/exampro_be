@@ -59,7 +59,7 @@ export class AdminController {
   }
 
   @Get('/user/:email')
-  @Role('user/admin/system', 'user/admin/user')
+  @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async getUserProfile(@Param('email') email: string) {
     return _.omit(await this.userService.getUserProfile(email), ['password']);
   }
