@@ -206,52 +206,48 @@ export class ExamService {
   }
 
   async queryExams(
-    creator: User,
     lastCursor: number,
     size: number,
     order: 'asc' | 'desc',
     search: string,
-    roleId: string,
+    roleIds: string[],
+    user: User = null,
   ) {
-    const data = await queryWithPagination<number, ExamUser>(
-      this.examUserRepository,
+    const data = await queryWithPagination<number, Exam>(
+      this.examRepository,
       lastCursor,
       order.toUpperCase() as 'ASC' | 'DESC',
       size,
       {
-        cursorColumn: 'exam.id',
         search,
-        searchColumns: ['exam.title'],
+        searchColumns: ['title'],
+        cursorColumn: 'exams.id',
+        orderColumn: 'id',
+        searchWithAlias: true,
         query: {
           join: {
-            alias: 'items',
+            alias: 'exams',
             leftJoin: {
-              exam: 'items.exam',
-              user: 'items.user',
-              role: 'items.role',
+              users: 'exams.users',
             },
           },
           where: (qb: SelectQueryBuilder<ExamUser>) => {
-            qb.andWhere('user.email = :email', {
-              email: creator.email,
-            });
-            if (roleId.length > 0) {
-              qb.andWhere('role.id = :roleId', {
-                roleId,
+            if (user) {
+              qb.andWhere('users.user.email = :email', {
+                email: user.email,
+              });
+            }
+            if (roleIds.length > 0) {
+              qb.andWhere('users.role.id IN (:roleIds)', {
+                roleIds,
               });
             }
             return '';
           },
-          relations: ['exam', 'role'],
         },
       },
     );
-    return {
-      items: data.items.map((item) =>
-        _.merge(_.omit(item.exam, ['role']), { role: item.role }),
-      ),
-      total: data.total,
-    };
+    return data;
   }
 
   async transformOwnership(

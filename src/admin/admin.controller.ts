@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import _ from 'lodash';
+import { ExamService } from 'src/exam/exam.service';
 import { MenuService } from 'src/menu/menu.service';
 import { PaperService } from 'src/paper/paper.service';
 import { ReportStatus } from 'src/report/report.entity';
@@ -30,6 +31,7 @@ export class AdminController {
     private readonly roleService: RoleService,
     private readonly reportService: ReportService,
     private readonly paperService: PaperService,
+    private readonly examService: ExamService,
   ) {}
 
   @Post()
@@ -287,5 +289,43 @@ export class AdminController {
     @Body('papers') paperIds: number[],
   ) {
     return await this.paperService.unblockPaper(paperIds);
+  }
+
+  @Get('/paper')
+  @Role('user/admin/system', 'user/admin/resource')
+  async queryPapers(
+    @Query('last_cursor') lastCursor = '',
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+  ) {
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.paperService.queryPapers(cursor, size, order, search, [
+      'resource/paper/owner',
+      'resource/paper/maintainer',
+    ]);
+  }
+
+  @Get('/exam')
+  @Role('user/admin/system', 'user/admin/resource')
+  async queryExams(
+    @Query('last_cursor') lastCursor = '',
+    @Query('size') size = '10',
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'desc',
+  ) {
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.examService.queryExams(
+      cursor,
+      parseInt(size),
+      order,
+      search,
+      [
+        'resource/exam/participant',
+        'resource/exam/reviewer',
+        'resource/exam/invigilator',
+        'resource/exam/initiator',
+      ],
+    );
   }
 }

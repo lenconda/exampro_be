@@ -5,9 +5,10 @@ import { MenuModule } from 'src/menu/menu.module';
 import { RoleModule } from 'src/role/role.module';
 import { ReportModule } from 'src/report/report.module';
 import { PaperModule } from 'src/paper/paper.module';
+import { ExamModule } from 'src/exam/exam.module';
 
 @Module({
-  imports: [MenuModule, RoleModule, ReportModule, PaperModule],
+  imports: [MenuModule, RoleModule, ReportModule, PaperModule, ExamModule],
   providers: [AdminService],
   controllers: [AdminController],
   exports: [AdminService],

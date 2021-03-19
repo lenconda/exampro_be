@@ -264,22 +264,24 @@ export class ExamController {
   }
 
   @Get()
-  async getPapers(
+  async queryExams(
     @CurrentUser() user,
     @Query('last_cursor') lastCursor = '',
     @Query('size') size = '10',
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
-    @Query('role') roleId = 'resource/exam/participant',
+    @Query('roles')
+    roles = 'resource/exam/participant,resource/exam/reviewer,resource/exam/invigilator,resource/exam/initiator',
   ) {
+    const roleIds = roles ? roles.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.examService.queryExams(
-      user,
       cursor,
       parseInt(size),
       order,
       search,
-      roleId,
+      roleIds,
+      user,
     );
   }
 }

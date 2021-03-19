@@ -99,52 +99,48 @@ export class PaperService {
   }
 
   async queryPapers(
-    creator: User,
     lastCursor: number,
     size: number,
     order: 'asc' | 'desc',
     search: string,
     roleIds: string[],
+    user: User = null,
   ) {
-    const data = await queryWithPagination<number, PaperUser>(
-      this.paperUserRepository,
+    const data = await queryWithPagination<number, Paper>(
+      this.paperRepository,
       lastCursor,
       order.toUpperCase() as 'ASC' | 'DESC',
       size,
       {
-        cursorColumn: 'paper.id',
+        cursorColumn: 'papers.id',
+        orderColumn: 'id',
         search,
-        searchColumns: ['paper.title'],
+        searchColumns: ['title'],
+        searchWithAlias: true,
         query: {
           join: {
-            alias: 'items',
+            alias: 'papers',
             leftJoin: {
-              paper: 'items.paper',
-              user: 'items.user',
-              role: 'items.role',
+              users: 'papers.users',
             },
           },
           where: (qb: SelectQueryBuilder<Paper>) => {
-            qb.andWhere('user.email = :email', {
-              email: creator.email,
-            });
+            if (user) {
+              qb.andWhere('users.user.email = :email', {
+                email: user.email,
+              });
+            }
             if (roleIds.length > 0) {
-              qb.andWhere('role.id IN (:roleIds)', {
+              qb.andWhere('users.role.id IN (:roleIds)', {
                 roleIds,
               });
             }
             return '';
           },
-          relations: ['paper', 'role'],
         },
       },
     );
-    return {
-      items: data.items.map((item) =>
-        _.merge(_.omit(item.paper, ['role']), { role: item.role }),
-      ),
-      total: data.total,
-    };
+    return data;
   }
 
   async createPaperQuestion(

@@ -21,7 +21,7 @@ export class PaperController {
   constructor(private readonly paperService: PaperService) {}
 
   @Get()
-  async getPapers(
+  async queryPapers(
     @CurrentUser() user,
     @Query('last_cursor') lastCursor = '',
     @Query('size') size = '10',
@@ -32,12 +32,12 @@ export class PaperController {
     const roleIds = roles ? roles.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.paperService.queryPapers(
-      user,
       cursor,
       parseInt(size),
       order,
       search,
       roleIds,
+      user,
     );
   }
 
