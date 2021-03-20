@@ -20,6 +20,9 @@ export class ExamUser {
   @Column({ default: null, nullable: true })
   confirmed: boolean;
 
+  @Column({ name: 'left_times', default: 0 })
+  leftTimes: number;
+
   @ManyToOne(() => Role, (role) => role.id, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',

@@ -284,4 +284,16 @@ export class ExamController {
       user,
     );
   }
+
+  @Put('/:exam/left_times')
+  @Role('resource/exam/participant')
+  async updateParticipantLeftTimes(
+    @CurrentUser() participant: User,
+    @Param('exam') examId: number,
+  ) {
+    return await this.examService.updateParticipantLeftTimes(
+      participant,
+      examId,
+    );
+  }
 }

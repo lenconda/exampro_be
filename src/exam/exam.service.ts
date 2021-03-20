@@ -493,4 +493,22 @@ export class ExamService {
       );
     }
   }
+
+  async updateParticipantLeftTimes(participant: User, examId: number) {
+    const examUser = await this.examUserRepository.findOne({
+      user: {
+        email: participant.email,
+      },
+      exam: {
+        id: examId,
+      },
+      role: {
+        id: 'resource/exam/participant',
+      },
+    });
+    if (examUser) {
+      examUser.leftTimes = examUser.leftTimes + 1;
+      await this.examUserRepository.save(examUser);
+    }
+  }
 }
