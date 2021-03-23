@@ -28,6 +28,9 @@ export class Menu {
   @Column({ default: true })
   show: boolean;
 
+  @Column()
+  order: number;
+
   @OneToMany(() => Menu, (menu) => menu.parentMenu)
   children: Menu[];
 

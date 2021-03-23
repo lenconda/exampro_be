@@ -44,7 +44,12 @@ import { ReportType } from './report/report_type.entity';
     }),
     TypeOrmModule.forFeature([Role, User, UserRole, ReportType]),
     RedisModule.forRootAsync({
-      useFactory: async (config: ConfigService) => config.get('redis'),
+      useFactory: async (config: ConfigService) => {
+        return {
+          ...config.get('redis'),
+          connectTimeout: null,
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,

@@ -13,7 +13,7 @@ import { MenuRole } from 'src/role/menu_role.entity';
 import { Role } from 'src/role/role.entity';
 import { checkValueMatchPatterns } from 'src/utils/checkers';
 import { queryWithPagination } from 'src/utils/pagination';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Menu } from './menu.entity';
 import _ from 'lodash';
 
@@ -113,19 +113,39 @@ export class MenuService {
   }
 
   async getMenu(roles: Partial<Role>[]) {
-    const items = await this.menuRoleRepository.find({
-      where: {
-        role: {
-          id: In(roles.map((role) => role.id)),
+    const items = await this.menuRepository.find({
+      join: {
+        alias: 'menus',
+        leftJoin: {
+          roles: 'menus.menuRoles',
+          children: 'menus.children',
         },
       },
-      relations: ['menu', 'menu.parentMenu', 'menu.children'],
+      where: (qb: SelectQueryBuilder<Menu>) => {
+        qb.where('roles.role.id IN (:roleIds)', {
+          roleIds: roles.map((role) => role.id),
+        });
+        return '';
+      },
+      relations: ['parentMenu', 'children'],
     });
-    return items
-      .filter((item) => !item.menu.parentMenu)
-      .map((item) => {
-        return _.omit(item.menu, ['parentMenu']);
-      });
+    const sort = (items: Menu[]): Array<Menu & { items: Menu[] }> => {
+      const result = [];
+      const sortedItems = _.sortBy(items, (item) => item.order, ['asc']);
+      for (const item of sortedItems) {
+        const currentInfo = _.omit(item, ['parentMenu', 'children']) as Record<
+          string,
+          any
+        >;
+        const currentChildren = item.children || [];
+        if (currentChildren.length !== 0) {
+          currentInfo.items = sort(currentChildren);
+        }
+        result.push(currentInfo);
+      }
+      return result;
+    };
+    return sort(items.filter((item) => !item.parentMenu));
   }
 
   async updateMenu(id: number, updates: Record<string, any>) {
