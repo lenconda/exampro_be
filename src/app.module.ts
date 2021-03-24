@@ -48,6 +48,8 @@ import { ReportType } from './report/report_type.entity';
         return {
           ...config.get('redis'),
           connectTimeout: null,
+          reconnectOnError: () => true,
+          retryStrategy: () => 100,
         };
       },
       inject: [ConfigService],
