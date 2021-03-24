@@ -204,4 +204,17 @@ export class AuthService {
     }
     return;
   }
+
+  async checkEmail(email: string) {
+    if (await this.userRepository.findOne({ email })) {
+      return {
+        type: 'login',
+      };
+    } else {
+      await this.register([email], false);
+      return {
+        type: 'register',
+      };
+    }
+  }
 }

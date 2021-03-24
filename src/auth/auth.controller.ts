@@ -32,4 +32,9 @@ export class AuthController {
   async resend(@Param('email') email: string, @Param('type') type: string) {
     return await this.authService.resend(email, type);
   }
+
+  @Post('/check')
+  async checkEmail(@Body('email') email: string) {
+    return await this.authService.checkEmail(email);
+  }
 }
