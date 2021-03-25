@@ -37,7 +37,7 @@ export class MailService {
   async sendRegisterMail(items: RegisterUsers[]) {
     for (const item of items) {
       const { token, email } = item;
-      const link = `${this.hostname}/user/complete?token=${token}&type=register`;
+      const link = `${this.hostname}/user/complete?token=${token}&type=registration`;
       const resendLink = `${this.hostname}/user/resend?type=register`;
       this.mailerService.sendMail({
         to: email,
@@ -81,7 +81,7 @@ export class MailService {
   }
 
   async sendResetPasswordMail(email: string, token: string) {
-    const link = `${this.hostname}/user/complete?token=${token}&type=reset_password`;
+    const link = `${this.hostname}/user/complete?token=${token}&type=forget_password`;
     const resendLink = `${this.hostname}/user/resend?type=reset_password`;
     this.mailerService.sendMail({
       to: email,

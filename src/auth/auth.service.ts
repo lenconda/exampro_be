@@ -211,7 +211,7 @@ export class AuthService {
         type: 'login',
       };
     } else {
-      await this.register([email], false);
+      await this.register([email]);
       return {
         type: 'register',
       };

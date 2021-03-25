@@ -15,6 +15,7 @@ import {
   ERR_ACCOUNT_NOT_FOUND,
   ERR_EMAIL_DUPLICATED,
   ERR_OLD_PASSWORD_MISMATCHED,
+  ERR_PASSWORD_NOT_NULL,
 } from 'src/constants';
 import { RedisService } from 'nestjs-redis';
 import { Redis } from 'ioredis';
@@ -196,9 +197,13 @@ export class UserService {
   async complete(email: string, info: Record<string, any>) {
     const userInfo = await this.userRepository.findOne({
       where: { email },
+      select: ['password'],
     });
     if (!userInfo) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
+    }
+    if (userInfo.password) {
+      throw new BadRequestException(ERR_PASSWORD_NOT_NULL);
     }
     await this.userRepository.update(
       { email },
