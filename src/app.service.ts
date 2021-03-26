@@ -10,6 +10,7 @@ import md5 from 'md5';
 import { ConfigService } from './config/config.service';
 import { ReportType } from './report/report_type.entity';
 import _ from 'lodash';
+import fs from 'fs';
 
 @Injectable()
 export class AppService {
@@ -31,6 +32,7 @@ export class AppService {
     await this.initializeRoles();
     await this.initializeRootAdmin();
     await this.initializeReportTypes();
+    this.initializeFileDirs();
   }
 
   private async initializeRoles() {
@@ -87,5 +89,18 @@ export class AppService {
       });
     });
     await this.reportTypeRepository.save(reportTypes);
+  }
+
+  private initializeFileDirs() {
+    const filePathsConfig = this.configService.get('uploadFiles');
+    Object.keys(filePathsConfig).forEach((filePathKey) => {
+      const filePath = filePathsConfig[filePathKey];
+      if (fs.existsSync(filePath) && !fs.statSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      if (!fs.existsSync(filePath)) {
+        fs.mkdirSync(filePathsConfig[filePathKey], { recursive: true });
+      }
+    });
   }
 }

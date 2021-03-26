@@ -26,6 +26,7 @@ import { AppInterceptor } from './app.interceptor';
 import { ExamModule } from './exam/exam.module';
 import { ReportModule } from './report/report.module';
 import { ReportType } from './report/report_type.entity';
+import { ResourceModule } from './resource/resource.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { ReportType } from './report/report_type.entity';
     PaperModule,
     ExamModule,
     ReportModule,
+    ResourceModule,
   ],
   controllers: [AppController],
   providers: [
