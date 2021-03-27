@@ -48,9 +48,15 @@ import { ResourceModule } from './resource/resource.module';
       useFactory: async (config: ConfigService) => {
         return {
           ...config.get('redis'),
-          connectTimeout: null,
+          connectTimeout: 0,
+          maxRetriesPerRequest: 20,
+          enableOfflineQueue: false,
+          keepAlive: 0,
           reconnectOnError: () => true,
-          retryStrategy: () => 100,
+          retryStrategy: (times) => {
+            console.warn(`Retrying redis connection: attempt ${times}`);
+            return 10;
+          },
         };
       },
       inject: [ConfigService],
