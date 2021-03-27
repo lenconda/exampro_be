@@ -17,11 +17,12 @@ import {
   ERR_OLD_PASSWORD_MISMATCHED,
   ERR_PASSWORD_NOT_NULL,
 } from 'src/constants';
-import { RedisService } from 'nestjs-redis';
-import { Redis } from 'ioredis';
+import redis from 'redis';
+import { promisify } from 'util';
 import { generateActiveCode } from 'src/utils/generators';
 import { MailService } from 'src/mail/mail.service';
 import { AuthService } from 'src/auth/auth.service';
+import { RedisService } from 'src/redis/redis.service';
 
 @Injectable()
 export class UserService {
@@ -37,9 +38,13 @@ export class UserService {
     private readonly authService: AuthService,
   ) {
     this.redis = redisService.getClient();
+    this.redisSetAsync = promisify(this.redis.set).bind(this.redis);
+    this.redisDelAsync = promisify(this.redis.del).bind(this.redis);
   }
 
-  private redis: Redis;
+  private redis: redis.RedisClient;
+  private redisSetAsync;
+  private redisDelAsync;
 
   async createAdminUser(email: string, password: string, roleIds: string[]) {
     const adminUser = this.userRepository.create({
@@ -98,7 +103,7 @@ export class UserService {
   async updateUserProfile(email: string, data: Partial<User>) {
     return await this.userRepository.save({
       email,
-      ..._.pick(data, ['avatar', 'name']),
+      ..._.pick(data, ['avatar', 'name', 'description']),
     });
   }
 
@@ -133,9 +138,9 @@ export class UserService {
     };
     const { ttl } = userBlockRecord;
     if (ttl === -1 || days === -1) {
-      await this.redis.set(key, type);
+      await this.redisSetAsync(key, type);
     } else {
-      await this.redis.set(key, type, 'EX', ttl + days * 86400);
+      await this.redisSetAsync(key, type, 'EX', ttl + days * 86400);
     }
     return user;
   }
@@ -145,7 +150,7 @@ export class UserService {
     if (!user) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
-    await this.redis.del(`ban:user:${email}`);
+    await this.redisDelAsync(`ban:user:${email}`);
     return user;
   }
 

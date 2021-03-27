@@ -14,7 +14,6 @@ import { Role } from './role/role.entity';
 import { User } from './user/user.entity';
 import { UserRole } from './role/user_role.entity';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RedisModule } from 'nestjs-redis';
 import { ConfigService } from './config/config.service';
 import { ConfigModule } from './config/config.module';
 import { MenuModule } from './menu/menu.module';
@@ -27,6 +26,7 @@ import { ExamModule } from './exam/exam.module';
 import { ReportModule } from './report/report.module';
 import { ReportType } from './report/report_type.entity';
 import { ResourceModule } from './resource/resource.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -48,9 +48,8 @@ import { ResourceModule } from './resource/resource.module';
       useFactory: async (config: ConfigService) => {
         return {
           ...config.get('redis'),
-          connectTimeout: null,
-          reconnectOnError: () => true,
-          retryStrategy: () => 100,
+          // reconnectOnError: () => true,
+          // retryStrategy: (times) => Math.min(times * 50, 2000),
         };
       },
       inject: [ConfigService],
@@ -80,6 +79,7 @@ import { ResourceModule } from './resource/resource.module';
     ExamModule,
     ReportModule,
     ResourceModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [

@@ -13,10 +13,11 @@ import {
 import { UserRole } from 'src/role/user_role.entity';
 import { Role } from 'src/role/role.entity';
 import { generateActiveCode } from 'src/utils/generators';
-import { RedisService } from 'nestjs-redis';
-import { Redis } from 'ioredis';
+import redis from 'redis';
 import { MailService } from 'src/mail/mail.service';
 import _ from 'lodash';
+import { RedisService } from 'src/redis/redis.service';
+import { promisify } from 'util';
 
 @Injectable()
 export class AuthService {
@@ -32,17 +33,25 @@ export class AuthService {
     private readonly redisService: RedisService,
   ) {
     this.redis = redisService.getClient();
+    this.redisGetAsync = promisify(this.redis.get).bind(this.redis);
+    this.redisTtlAsync = promisify(this.redis.ttl).bind(this.redis);
+    this.redisSetAsync = promisify(this.redis.set).bind(this.redis);
+    this.redisExistsAsync = promisify(this.redis.exists).bind(this.redis);
   }
 
-  private redis: Redis;
+  private redis: redis.RedisClient;
+  private redisGetAsync;
+  private redisTtlAsync;
+  private redisSetAsync;
+  private redisExistsAsync;
 
   async getUserBanStatus(email: string) {
     const key = `ban:user:${email}`;
-    const banStatus = await this.redis.get(key);
+    const banStatus = await this.redisGetAsync(key);
     if (!banStatus) {
       return;
     }
-    const ttl = await this.redis.ttl(key);
+    const ttl = await this.redisTtlAsync(key);
     return { banStatus, ttl };
   }
 
@@ -91,7 +100,7 @@ export class AuthService {
   }
 
   async checkToken(token: string) {
-    const existence = await this.redis.exists(`token:${token}`);
+    const existence = await this.redisExistsAsync(`token:${token}`);
     return Boolean(existence);
   }
 
@@ -102,7 +111,7 @@ export class AuthService {
     if (expirationTimestamp <= currentTimestamp) {
       return;
     }
-    await this.redis.set(
+    await this.redisSetAsync(
       `token:${token}`,
       new Date().toISOString(),
       'EX',

@@ -5,11 +5,10 @@ import { UserRole } from 'src/role/user_role.entity';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { RedisModule } from 'nestjs-redis';
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserRole, Role]), RedisModule],
+  imports: [TypeOrmModule.forFeature([User, UserRole, Role])],
   providers: [UserService],
   exports: [UserService],
   controllers: [UserController],
