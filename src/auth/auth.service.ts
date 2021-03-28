@@ -121,7 +121,9 @@ export class AuthService {
   }
 
   async logout(redirect: string) {
-    return { redirect };
+    return {
+      redirect: `/user/auth?redirect=${redirect}`,
+    };
   }
 
   async register(emails: string[], notify = true) {

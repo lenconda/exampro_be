@@ -79,6 +79,7 @@ export class MenuService {
     pathname: string,
     icon = '',
     parentId,
+    order: number,
     roleIds: string[] = [],
   ) {
     let parentMenu = null;
@@ -96,6 +97,7 @@ export class MenuService {
       title,
       pathname,
       icon,
+      order,
       parentMenu,
     });
     await this.menuRepository.save(menuItem);

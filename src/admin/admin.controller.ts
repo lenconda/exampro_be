@@ -106,12 +106,14 @@ export class AdminController {
     @Body('icon') icon: string,
     @Body('parent') parent: number,
     @Body('roles') roles: string[],
+    @Body('order') order: number,
   ) {
     return await this.menuService.createMenuItem(
       title,
       pathname,
       icon,
       parent,
+      order,
       roles,
     );
   }
