@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
+import { RoleService } from 'src/role/role.service';
 import { CurrentUser } from 'src/user/user.decorator';
 import { User } from 'src/user/user.entity';
 import { Exam } from './exam.entity';
@@ -29,7 +30,13 @@ export class ExamController {
   constructor(
     private readonly examService: ExamService,
     private readonly examResultService: ExamResultService,
+    private readonly roleService: RoleService,
   ) {}
+
+  @Get('/roles')
+  async getExamRoles() {
+    return await this.roleService.getResourceRoles('exam');
+  }
 
   @Post('/paper')
   @Role('resource/exam/initiator', 'resource/exam/maintainer')

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Question } from 'src/question/question.entity';
 import { Role } from 'src/role/role.entity';
+import { RoleModule } from 'src/role/role.module';
 import { User } from 'src/user/user.entity';
 import { PaperController } from './paper.controller';
 import { Paper } from './paper.entity';
@@ -19,6 +20,7 @@ import { PaperUser } from './paper_user.entity';
       Question,
       Role,
     ]),
+    RoleModule,
   ],
   controllers: [PaperController],
   providers: [PaperService],

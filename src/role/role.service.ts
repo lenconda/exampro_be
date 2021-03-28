@@ -237,4 +237,14 @@ export class RoleService {
       items: data.items.map((item) => item.menu),
     };
   }
+
+  async getResourceRoles(type: string) {
+    if (!['exam', 'paper'].includes(type)) {
+      return { items: [] };
+    }
+    const data = await this.roleRepository.find();
+    return {
+      items: data.filter((item) => item.id.startsWith(`resource/${type}`)),
+    };
+  }
 }

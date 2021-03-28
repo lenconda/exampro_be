@@ -9,6 +9,7 @@ import { User } from 'src/user/user.entity';
 import { ExamResult } from './exam_result.entity';
 import { ExamResultService } from './exam_result.service';
 import { PaperQuestion } from 'src/paper/paper_question.entity';
+import { RoleModule } from 'src/role/role.module';
 
 @Global()
 @Module({
@@ -21,6 +22,7 @@ import { PaperQuestion } from 'src/paper/paper_question.entity';
       ExamResult,
       PaperQuestion,
     ]),
+    RoleModule,
   ],
   providers: [ExamService, ExamResultService],
   controllers: [ExamController],

@@ -12,13 +12,17 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
+import { RoleService } from 'src/role/role.service';
 import { CurrentUser } from 'src/user/user.decorator';
 import { PaperService } from './paper.service';
 
 @Controller('/api/paper')
 @UseGuards(AuthGuard('jwt'), RoleGuard)
 export class PaperController {
-  constructor(private readonly paperService: PaperService) {}
+  constructor(
+    private readonly paperService: PaperService,
+    private readonly roleService: RoleService,
+  ) {}
 
   @Get()
   async queryPapers(
@@ -39,6 +43,11 @@ export class PaperController {
       roleIds,
       user,
     );
+  }
+
+  @Get('/roles')
+  async getExamRoles() {
+    return await this.roleService.getResourceRoles('paper');
   }
 
   @Post()
