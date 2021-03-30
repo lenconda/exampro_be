@@ -50,6 +50,7 @@ export class ReportService {
     order: 'asc' | 'desc',
     search: string,
     typeIds: string[] = [],
+    page,
     reporter?: User,
   ) {
     const result = await queryWithPagination<number, Report>(
@@ -77,6 +78,7 @@ export class ReportService {
           },
           relations: ['user', 'paper', 'exam', 'reporter'],
         },
+        page,
       },
     );
     return result;

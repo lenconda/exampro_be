@@ -48,6 +48,7 @@ export class AdminController {
   @Role('user/admin/system', 'user/admin/user', 'user/admin/role')
   async queryUsers(
     @Query('last_cursor') lastCursor = null,
+    @Query('page') page = '0',
     @Query('search') search = '',
     @Query('size') size = 10,
     @Query('order') order = 'asc',
@@ -57,6 +58,7 @@ export class AdminController {
       size,
       order,
       search,
+      parseInt(page),
     );
   }
 
@@ -87,6 +89,7 @@ export class AdminController {
   async queryMenu(
     @Query('last_cursor') lastCursor = '0',
     @Query('size') size = '-1',
+    @Query('page') page = '0',
     @Query('role') roleId: string,
     @Query('order') order: 'asc' | 'desc' = 'asc',
   ) {
@@ -95,6 +98,7 @@ export class AdminController {
       parseInt(size),
       order,
       roleId,
+      parseInt(page),
     );
   }
 
@@ -184,6 +188,7 @@ export class AdminController {
     @Query('size') size = 10,
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'asc',
+    @Query('page') page = '0',
   ) {
     return await this.roleService.queryRoleUsers(
       lastCursor,
@@ -191,6 +196,7 @@ export class AdminController {
       order,
       search,
       roleId,
+      parseInt(page),
     );
   }
 
@@ -220,6 +226,7 @@ export class AdminController {
     @Query('size') size = 10,
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'asc',
+    @Query('page') page = '0',
   ) {
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.roleService.queryRoleMenus(
@@ -228,6 +235,7 @@ export class AdminController {
       order,
       search,
       roleId,
+      parseInt(page),
     );
   }
 
@@ -257,6 +265,7 @@ export class AdminController {
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('types') types = '',
+    @Query('page') page = '0',
   ) {
     const typeIds = types ? types.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
@@ -266,6 +275,7 @@ export class AdminController {
       order,
       search,
       typeIds,
+      parseInt(page),
     );
   }
 
@@ -300,12 +310,17 @@ export class AdminController {
     @Query('size') size = 10,
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('page') page = '0',
   ) {
     const cursor = lastCursor ? parseInt(lastCursor) : null;
-    return await this.paperService.queryPapers(cursor, size, order, search, [
-      'resource/paper/owner',
-      'resource/paper/maintainer',
-    ]);
+    return await this.paperService.queryPapers(
+      cursor,
+      size,
+      order,
+      search,
+      ['resource/paper/owner', 'resource/paper/maintainer'],
+      parseInt(page),
+    );
   }
 
   @Get('/exam')
@@ -315,6 +330,7 @@ export class AdminController {
     @Query('size') size = '10',
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('page') page = '0',
   ) {
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.examService.queryExams(
@@ -328,6 +344,7 @@ export class AdminController {
         'resource/exam/invigilator',
         'resource/exam/initiator',
       ],
+      parseInt(page),
     );
   }
 }

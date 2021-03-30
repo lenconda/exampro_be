@@ -211,6 +211,7 @@ export class ExamService {
     order: 'asc' | 'desc',
     search: string,
     roleIds: string[],
+    page,
     user: User = null,
   ) {
     const data = await queryWithPagination<number, Exam>(
@@ -224,6 +225,7 @@ export class ExamService {
         cursorColumn: 'exams.id',
         orderColumn: 'id',
         searchWithAlias: true,
+        page,
         query: {
           join: {
             alias: 'exams',
@@ -417,6 +419,7 @@ export class ExamService {
     search: string,
     order: 'asc' | 'desc',
     type: string,
+    page,
   ) {
     const allowedTypes = [
       'maintainer',
@@ -457,6 +460,7 @@ export class ExamService {
           },
           relations: ['user'],
         },
+        page,
       },
     );
     return {

@@ -132,6 +132,7 @@ export class RoleService {
     order: 'asc' | 'desc',
     search: string,
     roleId: string,
+    page,
   ) {
     const data = await queryWithPagination<string, UserRole>(
       this.userRoleRepository,
@@ -156,6 +157,7 @@ export class RoleService {
           },
           relations: ['user'],
         },
+        page,
       },
     );
     return {
@@ -206,6 +208,7 @@ export class RoleService {
     order: 'asc' | 'desc',
     search: string,
     roleId: string,
+    page,
   ) {
     const data = await queryWithPagination<number, MenuRole>(
       this.menuRoleRepository,
@@ -230,6 +233,7 @@ export class RoleService {
           },
           relations: ['menu'],
         },
+        page,
       },
     );
     return {

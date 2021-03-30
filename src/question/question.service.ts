@@ -87,6 +87,7 @@ export class QuestionService {
     order: 'asc' | 'desc',
     search: string,
     categoryIds: number[],
+    page,
   ) {
     const query: FindManyOptions<Question> = {
       join: {
@@ -119,6 +120,7 @@ export class QuestionService {
         searchColumns: ['questions.content'],
         search,
         searchWithAlias: true,
+        page,
       },
     );
   }

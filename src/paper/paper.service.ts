@@ -104,6 +104,7 @@ export class PaperService {
     order: 'asc' | 'desc',
     search: string,
     roleIds: string[],
+    page,
     user: User = null,
   ) {
     const data = await queryWithPagination<number, Paper>(
@@ -117,6 +118,7 @@ export class PaperService {
         search,
         searchColumns: ['title'],
         searchWithAlias: true,
+        page,
         query: {
           join: {
             alias: 'papers',
@@ -272,6 +274,7 @@ export class PaperService {
     size: number,
     search: string,
     order: 'asc' | 'desc',
+    page,
   ) {
     const data = await queryWithPagination<number, PaperUser>(
       this.paperUserRepository,
@@ -300,6 +303,7 @@ export class PaperService {
           },
           relations: ['user'],
         },
+        page,
       },
     );
     return {

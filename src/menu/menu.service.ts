@@ -33,6 +33,7 @@ export class MenuService {
     size: number,
     order: 'asc' | 'desc',
     roleId = '',
+    page,
   ) {
     const queryOrder = order.toUpperCase() as 'ASC' | 'DESC';
     if (roleId) {
@@ -58,6 +59,7 @@ export class MenuService {
             where: { role },
             relations: ['menu'],
           },
+          page,
         },
       );
       return {
@@ -70,6 +72,9 @@ export class MenuService {
         lastCursor,
         queryOrder,
         size,
+        {
+          page,
+        },
       );
     }
   }

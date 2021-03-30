@@ -35,12 +35,14 @@ export class UserController {
     @Query('search') search = '',
     @Query('size') size = '-1',
     @Query('order') order = 'asc',
+    @Query('page') page = '0',
   ) {
     return await this.userService.queryUsers<string>(
       lastCursor,
       parseInt(size),
       order,
       search,
+      parseInt(page),
     );
   }
 

@@ -13,6 +13,7 @@ export interface QueryPaginationOptions<K> {
   searchColumns?: string[];
   searchWithAlias?: boolean;
   query?: FindManyOptions<K>;
+  page?: number;
 }
 
 export const queryWithPagination = async <T, K>(
@@ -28,8 +29,20 @@ export const queryWithPagination = async <T, K>(
     searchColumns = ['id'],
     search = '',
     query = {},
+    page = null,
     searchWithAlias = false,
   } = options;
+
+  const skipQuery = {} as FindManyOptions<K>;
+
+  if (
+    size !== -1 &&
+    (_.isNull(lastCursor) ||
+      (!_.isNumber(lastCursor) && _.isEmpty(lastCursor))) &&
+    page > 0
+  ) {
+    skipQuery.skip = (page - 1) * size;
+  }
 
   const customWhere = _.get(query, 'where');
   const customWhereFunctionHandler = (qb: SelectQueryBuilder<K>) => {
@@ -123,6 +136,7 @@ export const queryWithPagination = async <T, K>(
     ..._.omit(query, ['where']),
     ...itemsWhereQuery,
     ...takeQuery,
+    ...skipQuery,
     ...orderQuery,
   } as FindManyOptions;
   const totalQuery = {

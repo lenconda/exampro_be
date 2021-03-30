@@ -220,6 +220,7 @@ export class ExamController {
     @Param('exam') examId: number,
     @Param('type') type: string,
     @Query('last_cursor') lastCursor = '',
+    @Query('page') page = '0',
     @Query('size') size = 10,
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
@@ -232,6 +233,7 @@ export class ExamController {
       search,
       order,
       type,
+      parseInt(page),
     );
   }
 
@@ -279,6 +281,7 @@ export class ExamController {
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('roles')
     roles = 'resource/exam/participant,resource/exam/reviewer,resource/exam/invigilator,resource/exam/initiator',
+    @Query('page') page = '0',
   ) {
     const roleIds = roles ? roles.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
@@ -288,6 +291,7 @@ export class ExamController {
       order,
       search,
       roleIds,
+      parseInt(page),
       user,
     );
   }

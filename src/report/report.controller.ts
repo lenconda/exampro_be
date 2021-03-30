@@ -27,6 +27,7 @@ export class ReportController {
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('types') types = '',
+    @Query('page') page = '0',
   ) {
     const typeIds = types ? types.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
@@ -36,6 +37,7 @@ export class ReportController {
       order,
       search,
       typeIds,
+      parseInt(page),
       reporter,
     );
   }

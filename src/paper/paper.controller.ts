@@ -32,6 +32,7 @@ export class PaperController {
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('roles') roles = 'resource/paper/owner,resource/paper/maintainer',
+    @Query('page') page = '0',
   ) {
     const roleIds = roles ? roles.split(',') : [];
     const cursor = lastCursor ? parseInt(lastCursor) : null;
@@ -41,6 +42,7 @@ export class PaperController {
       order,
       search,
       roleIds,
+      parseInt(page),
       user,
     );
   }
@@ -142,6 +144,7 @@ export class PaperController {
     @Query('size') size = '10',
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('page') page = '0',
   ) {
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return this.paperService.queryPaperMaintainers(
@@ -150,6 +153,7 @@ export class PaperController {
       parseInt(size),
       search,
       order,
+      parseInt(page),
     );
   }
 

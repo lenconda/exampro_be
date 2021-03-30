@@ -54,6 +54,7 @@ export class QuestionController {
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('categories') categoryIdsString = '',
+    @Query('page') page = '0',
   ) {
     const categoryIds = (categoryIdsString
       ? categoryIdsString.split(',')
@@ -67,6 +68,7 @@ export class QuestionController {
       order,
       search,
       categoryIds,
+      parseInt(page),
     );
   }
 
