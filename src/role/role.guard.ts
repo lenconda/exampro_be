@@ -62,7 +62,8 @@ export class RoleGuard implements CanActivate {
     };
 
     const participantChecker = (userExam: ExamUser) => {
-      if (userExam.exam.paper.banned) {
+      const userExamPaperBanned = _.get(userExam, 'exam.paper.banned');
+      if (_.isBoolean(userExamPaperBanned) && userExamPaperBanned) {
         return false;
       }
       if (controllerRoles.indexOf(userExam.role.id) === -1) {
@@ -138,15 +139,16 @@ export class RoleGuard implements CanActivate {
         .filter((userPaper) => {
           return (
             controllerRoles.indexOf(userPaper.role.id) !== -1 &&
-            !userPaper.paper.banned
+            !_.get(userPaper, 'paper.banned')
           );
         })
         .map((userPaper) => userPaper.paper.id)
         .concat(
           userExams
             .filter(participantChecker)
-            .filter((userExam) => !userExam.exam.paper.banned)
-            .map((userExam) => userExam.exam.paper.id),
+            .filter((userExam) => !_.get(userExam, 'exam.paper.banned'))
+            .map((userExam) => _.get(userExam, 'exam.paper.id'))
+            .filter((value) => value !== undefined),
         );
       if (paperIds.length === 0) {
         return false;
