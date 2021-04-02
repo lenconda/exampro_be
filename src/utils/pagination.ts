@@ -116,7 +116,6 @@ export const queryWithPagination = async <T, K>(
       qb.where(totalWhereConditions);
       searchQueryHandler(qb);
       customWhereFunctionHandler(qb);
-      cursorQueryHandler(qb);
     },
   } as FindManyOptions<K>;
   const itemsWhereQuery = {

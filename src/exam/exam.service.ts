@@ -224,7 +224,6 @@ export class ExamService {
         searchColumns: ['title'],
         cursorColumn: 'exams.id',
         orderColumn: 'id',
-        searchWithAlias: true,
         page,
         query: {
           join: {
