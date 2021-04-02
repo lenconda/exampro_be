@@ -20,6 +20,9 @@ export class Role {
   @Column({ nullable: true })
   description: string;
 
+  @Column({ default: 1 })
+  order: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

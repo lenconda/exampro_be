@@ -6,10 +6,10 @@ export const parseRolesTree = (
 ) => {
   let result = [];
   for (const tree of trees) {
-    const { name, children = [] } = tree;
+    const { name, children = [], order = 0 } = tree;
     const currentPath = previousPath.concat(name);
     if (children.length === 0) {
-      result.push({ id: currentPath.join('/') });
+      result.push({ id: currentPath.join('/'), order });
     } else {
       for (const child of children) {
         result = result.concat(parseRolesTree([child], currentPath));

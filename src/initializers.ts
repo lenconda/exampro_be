@@ -1,9 +1,10 @@
 export interface IRole {
   name: string;
+  order?: number;
   children?: Array<IRole>;
 }
 
-export const generateRoles = () => {
+export const generateRoles = (): IRole[] => {
   return [
     {
       name: 'user',
@@ -28,23 +29,26 @@ export const generateRoles = () => {
         {
           name: 'question_base',
           children: [
-            { name: 'owner' },
-            { name: 'maintainer' },
-            { name: 'member' },
+            { name: 'owner', order: 1 },
+            { name: 'maintainer', order: 2 },
+            { name: 'member', order: 3 },
           ],
         },
         {
           name: 'paper',
-          children: [{ name: 'owner' }, { name: 'maintainer' }],
+          children: [
+            { name: 'owner', order: 1 },
+            { name: 'maintainer', order: 2 },
+          ],
         },
         {
           name: 'exam',
           children: [
-            { name: 'initiator' },
-            { name: 'maintainer' },
-            { name: 'invigilator' },
-            { name: 'participant' },
-            { name: 'reviewer' },
+            { name: 'initiator', order: 2 },
+            { name: 'maintainer', order: 3 },
+            { name: 'invigilator', order: 4 },
+            { name: 'participant', order: 1 },
+            { name: 'reviewer', order: 5 },
           ],
         },
       ],

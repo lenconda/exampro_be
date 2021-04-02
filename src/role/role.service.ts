@@ -33,11 +33,11 @@ export class RoleService {
     private readonly menuRepository: Repository<Menu>,
   ) {}
 
-  async createRole(id: string, description?: string) {
+  async createRole(id: string, description?: string, order = 0) {
     if (await this.roleRepository.findOne({ id })) {
       throw new BadRequestException(ERR_ROLE_NOT_FOUND);
     }
-    return await this.roleRepository.save({ id, description });
+    return await this.roleRepository.save({ id, description, order });
   }
 
   async getFlattenedRoles() {
@@ -76,7 +76,7 @@ export class RoleService {
   }
 
   async updateRole(id: string, data: Partial<Role>) {
-    const updates = _.pick(data, ['description', 'id']);
+    const updates = _.pick(data, ['description', 'id', 'order']);
     if (updates.id && (await this.roleRepository.findOne({ id: updates.id }))) {
       throw new BadRequestException(ERR_ROLE_ID_DUPLICATED);
     }
@@ -247,8 +247,13 @@ export class RoleService {
       return { items: [] };
     }
     const data = await this.roleRepository.find();
+    const items = _.orderBy(
+      data.filter((item) => item.id.startsWith(`resource/${type}`)),
+      ['order'],
+      ['asc'],
+    );
     return {
-      items: data.filter((item) => item.id.startsWith(`resource/${type}`)),
+      items,
     };
   }
 }

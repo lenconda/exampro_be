@@ -148,8 +148,9 @@ export class AdminController {
   async createRole(
     @Body('id') id: string,
     @Body('description') description: string = null,
+    @Body('order') order = 1,
   ) {
-    return await this.roleService.createRole(id, description);
+    return await this.roleService.createRole(id, description, order);
   }
 
   @Get('/role')
