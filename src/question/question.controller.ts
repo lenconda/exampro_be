@@ -23,14 +23,12 @@ export class QuestionController {
     @CurrentUser() user,
     @Body('content') content: string,
     @Body('type') type: string,
-    @Body('mode') mode: string,
     @Body('categories') categories: number[] = [],
   ) {
     return await this.questionService.createQuestion(
       user,
       content,
       type,
-      mode,
       categories,
     );
   }

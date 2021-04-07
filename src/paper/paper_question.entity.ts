@@ -24,6 +24,12 @@ export class PaperQuestion {
   @Column()
   points: number;
 
+  @Column({
+    name: 'missed_choices_score',
+    default: 0,
+  })
+  missedChoicesScore: number;
+
   @OneToMany(() => ExamResult, (examResult) => examResult.paperQuestion)
   examResults: ExamResult[];
 

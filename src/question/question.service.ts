@@ -38,7 +38,6 @@ export class QuestionService {
     creator: User,
     content: string,
     type: string,
-    mode: string,
     categoryIds: number[],
   ) {
     const categories = await this.questionCategoryRepository.find({
@@ -50,7 +49,6 @@ export class QuestionService {
       creator,
       content,
       type,
-      mode,
     });
     await this.questionRepository.save(question);
     const questionCategories = categories.map((category) => {
@@ -75,7 +73,7 @@ export class QuestionService {
           email: creator.email,
         },
       },
-      _.pick(updates, ['content', 'type', 'mode']),
+      _.pick(updates, ['content', 'type']),
     );
     return;
   }

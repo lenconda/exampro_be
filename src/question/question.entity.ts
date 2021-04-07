@@ -28,12 +28,6 @@ export enum QuestionTypes {
   SHORT_ANSWER = 'short_answer',
 }
 
-export enum MultipleChoicesModes {
-  FULL = 'full',
-  PARTIAL = 'partial',
-  NIL = 'nil',
-}
-
 @Entity({ name: 'questions' })
 export class Question {
   @PrimaryGeneratedColumn()
@@ -41,13 +35,6 @@ export class Question {
 
   @Column()
   content: string;
-
-  @Column({
-    type: 'enum',
-    enum: MultipleChoicesModes,
-    default: MultipleChoicesModes.NIL,
-  })
-  mode: string;
 
   @OneToMany(
     () => QuestionQuestionCategory,

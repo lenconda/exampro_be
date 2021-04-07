@@ -75,11 +75,13 @@ export class PaperController {
   async createPaperQuestion(
     @Param('paper') paperId: number,
     @Body('question') questionId: number,
+    @Body('missed_choices_score') missedChoicesScore: number,
     @Body('order') order: number,
   ) {
     return await this.paperService.createPaperQuestion(
       paperId,
       questionId,
+      missedChoicesScore,
       order,
     );
   }

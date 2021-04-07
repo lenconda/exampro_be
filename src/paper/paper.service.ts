@@ -148,6 +148,7 @@ export class PaperService {
   async createPaperQuestion(
     paperId: number,
     questionId: number,
+    missedChoicesScore: number,
     order: number,
   ) {
     const paper = await this.paperRepository.findOne({ id: paperId });
@@ -170,6 +171,7 @@ export class PaperService {
           paper,
           question,
           order,
+          missedChoicesScore,
         }),
       );
     }
