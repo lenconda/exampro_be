@@ -78,6 +78,27 @@ export class QuestionController {
     return await this.questionService.createCategory(user, name);
   }
 
+  @Get('/category')
+  async getCategories(@CurrentUser() user) {
+    return await this.questionService.getCategories(user);
+  }
+
+  @Get('/category/:category')
+  async getCategory(
+    @CurrentUser() user,
+    @Param('category') categoryId: number,
+  ) {
+    return await this.questionService.getCategory(user, categoryId);
+  }
+
+  @Delete('/category')
+  async deleteCategory(
+    @CurrentUser() user,
+    @Body('categories') categories: number[],
+  ) {
+    return await this.questionService.deleteCategory(user, categories);
+  }
+
   @Post('/question_categories')
   async createQuestionsCategories(
     @CurrentUser() user,

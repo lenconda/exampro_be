@@ -417,4 +417,45 @@ export class QuestionService {
       answers.map((answer) => answer.id),
     );
   }
+
+  async getCategories(creator: User) {
+    const items = await this.questionCategoryRepository.find({
+      where: {
+        creator: {
+          email: creator.email,
+        },
+      },
+    });
+
+    return {
+      items,
+      total: items.length,
+    };
+  }
+
+  async getCategory(creator: User, id: number) {
+    const data = await this.questionCategoryRepository.findOne({
+      where: {
+        creator: {
+          email: creator.email,
+        },
+        id,
+      },
+    });
+    return data || null;
+  }
+
+  async deleteCategory(creator: User, ids: number[]) {
+    const categories = await this.questionCategoryRepository.find({
+      where: {
+        creator: {
+          email: creator.email,
+        },
+        id: In(ids),
+      },
+    });
+    await this.questionCategoryRepository.delete(
+      categories.map((category) => category.id),
+    );
+  }
 }
