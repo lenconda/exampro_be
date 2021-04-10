@@ -12,7 +12,13 @@ import {
 } from 'src/constants';
 import { User } from 'src/user/user.entity';
 import { queryWithPagination } from 'src/utils/pagination';
-import { FindManyOptions, In, Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  FindManyOptions,
+  In,
+  Like,
+  Repository,
+  SelectQueryBuilder,
+} from 'typeorm';
 import { Question } from './question.entity';
 import { QuestionAnswer } from './question_answer.entity';
 import { QuestionCategory } from './question_category.entity';
@@ -418,12 +424,17 @@ export class QuestionService {
     );
   }
 
-  async getCategories(creator: User) {
+  async getCategories(creator: User, search?: string) {
     const items = await this.questionCategoryRepository.find({
       where: {
         creator: {
           email: creator.email,
         },
+        ...(search
+          ? {
+              name: Like(search),
+            }
+          : {}),
       },
     });
 

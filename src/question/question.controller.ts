@@ -79,8 +79,8 @@ export class QuestionController {
   }
 
   @Get('/category')
-  async getCategories(@CurrentUser() user) {
-    return await this.questionService.getCategories(user);
+  async getCategories(@CurrentUser() user, @Query('search') search: string) {
+    return await this.questionService.getCategories(user, search);
   }
 
   @Get('/category/:category')
