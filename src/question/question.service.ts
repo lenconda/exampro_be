@@ -130,14 +130,18 @@ export class QuestionService {
   }
 
   async getQuestion(creator: User, id: number) {
-    return await this.questionRepository.findOne({
+    const data = await this.questionRepository.findOne({
       where: {
         id,
         creator: {
           email: creator.email,
         },
       },
-      relations: ['answers', 'choices'],
+      relations: ['answers', 'choices', 'categories', 'categories.category'],
+    });
+
+    return _.merge(_.omit(data, ['categories']), {
+      categories: data.categories.map((category) => category.category),
     });
   }
 

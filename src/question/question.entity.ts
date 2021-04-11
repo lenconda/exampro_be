@@ -13,7 +13,6 @@ import {
   JoinTable,
 } from 'typeorm';
 import { QuestionAnswer } from './question_answer.entity';
-import { QuestionCategory } from './question_category.entity';
 import { QuestionChoice } from './question_choice.entity';
 import { QuestionQuestionCategory } from './question_question_category.entity';
 
@@ -33,14 +32,14 @@ export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'longtext' })
   content: string;
 
   @OneToMany(
     () => QuestionQuestionCategory,
     (questionQuestionCategory) => questionQuestionCategory.question,
   )
-  categories: QuestionCategory[];
+  categories: QuestionQuestionCategory[];
 
   @OneToMany(() => QuestionAnswer, (answer) => answer.question)
   answers: QuestionAnswer[];
