@@ -195,24 +195,22 @@ export class QuestionService {
         relations: ['question', 'category'],
       },
     );
+    if (existedQuestionCategories.length) {
+      await this.questionQuestionCategoryRepository.delete(
+        existedQuestionCategories.map(
+          (questionCategory) => questionCategory.id,
+        ),
+      );
+    }
     const questionCategories: QuestionQuestionCategory[] = [];
     for (const question of questions) {
       for (const category of categories) {
-        if (
-          existedQuestionCategories.findIndex((questionCategory) => {
-            return (
-              questionCategory.category.id === category.id &&
-              questionCategory.question.id === question.id
-            );
-          }) === -1
-        ) {
-          questionCategories.push(
-            this.questionQuestionCategoryRepository.create({
-              question,
-              category,
-            }),
-          );
-        }
+        questionCategories.push(
+          this.questionQuestionCategoryRepository.create({
+            question,
+            category,
+          }),
+        );
       }
     }
     await this.questionQuestionCategoryRepository.save(questionCategories);
@@ -263,6 +261,18 @@ export class QuestionService {
       },
       relations: ['creator'],
     });
+    const existedQuestionChoices = await this.questionChoiceRepository.find({
+      where: {
+        question: {
+          id: questionId,
+        },
+      },
+    });
+    if (existedQuestionChoices.length) {
+      await this.questionChoiceRepository.delete(
+        existedQuestionChoices.map((questionChoice) => questionChoice.id),
+      );
+    }
     if (!question) {
       throw new NotFoundException();
     }
@@ -347,6 +357,18 @@ export class QuestionService {
     });
     if (!question) {
       throw new NotFoundException();
+    }
+    const existedQuestionAnswers = await this.questionAnswerRepository.find({
+      where: {
+        question: {
+          id: questionId,
+        },
+      },
+    });
+    if (existedQuestionAnswers.length) {
+      await this.questionAnswerRepository.delete(
+        existedQuestionAnswers.map((questionAnswers) => questionAnswers.id),
+      );
     }
     if (creator.email !== question.creator.email) {
       throw new ForbiddenException(ERR_QUESTION_MODIFICATION_PROHIBITED);
