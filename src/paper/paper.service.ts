@@ -194,10 +194,7 @@ export class PaperService {
   }
 
   async getPaperQuestions(paperId: number, answers: boolean) {
-    const relations = ['question', 'question.choices'];
-    if (answers) {
-      relations.push('question.answers');
-    }
+    const relations = ['question', 'question.choices', 'question.answers'];
     const paperQuestions = await this.paperQuestionRepository.find({
       where: {
         paper: {
@@ -209,7 +206,17 @@ export class PaperService {
       } as any,
       relations,
     });
-    const items = paperQuestions.map((paperQuestion) => paperQuestion.question);
+    const items = paperQuestions.map((paperQuestion) => {
+      const data = {
+        ...paperQuestion.question,
+        ...(paperQuestion.question.type === 'fill_in_blank'
+          ? {
+              blankCount: paperQuestion.question.answers.length,
+            }
+          : {}),
+      };
+      return answers ? data : _.omit(data, ['answers']);
+    });
     return { items };
   }
 

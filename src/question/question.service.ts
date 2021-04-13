@@ -140,9 +140,13 @@ export class QuestionService {
       relations: ['answers', 'choices', 'categories', 'categories.category'],
     });
 
-    return _.merge(_.omit(data, ['categories']), {
-      categories: data.categories.map((category) => category.category),
-    });
+    return _.merge(
+      _.omit(data, ['categories']),
+      {
+        categories: data.categories.map((category) => category.category),
+      },
+      data.type === 'fill_in_blank' ? { blankCount: data.answers.length } : {},
+    );
   }
 
   async createCategory(creator: User, name: string) {
