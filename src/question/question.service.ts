@@ -24,6 +24,7 @@ import { QuestionAnswer } from './question_answer.entity';
 import { QuestionCategory } from './question_category.entity';
 import { QuestionChoice } from './question_choice.entity';
 import { QuestionQuestionCategory } from './question_question_category.entity';
+import { convertFromRaw } from 'draft-js';
 
 @Injectable()
 export class QuestionService {
@@ -54,6 +55,7 @@ export class QuestionService {
     const question = this.questionRepository.create({
       creator,
       content,
+      summary: convertFromRaw(JSON.parse(content)).getPlainText(),
       type,
     });
     await this.questionRepository.save(question);
@@ -79,7 +81,16 @@ export class QuestionService {
           email: creator.email,
         },
       },
-      _.pick(updates, ['content', 'type']),
+      {
+        ..._.pick(updates, ['content', 'type']),
+        ...(updates.content
+          ? {
+              summary: convertFromRaw(
+                JSON.parse(updates.content),
+              ).getPlainText(),
+            }
+          : {}),
+      },
     );
     return;
   }
@@ -122,7 +133,7 @@ export class QuestionService {
         query,
         cursorColumn: 'questions.id',
         orderColumn: 'id',
-        searchColumns: ['questions.content'],
+        searchColumns: ['questions.summary'],
         search,
         page,
       },

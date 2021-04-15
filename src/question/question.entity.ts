@@ -35,6 +35,9 @@ export class Question {
   @Column({ type: 'longtext' })
   content: string;
 
+  @Column({ type: 'longtext', nullable: true })
+  summary: string;
+
   @OneToMany(
     () => QuestionQuestionCategory,
     (questionQuestionCategory) => questionQuestionCategory.question,
