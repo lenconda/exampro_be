@@ -123,7 +123,6 @@ export class QuestionService {
         orderColumn: 'id',
         searchColumns: ['questions.content'],
         search,
-        searchWithAlias: true,
         page,
       },
     );
