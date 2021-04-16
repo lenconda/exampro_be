@@ -108,7 +108,11 @@ export class QuestionService {
       join: {
         alias: 'questions',
         innerJoin: {
-          categories: 'questions.categories',
+          ...(categoryIds.length > 0
+            ? {
+                categories: 'questions.categories',
+              }
+            : {}),
           creator: 'questions.creator',
         },
       },
