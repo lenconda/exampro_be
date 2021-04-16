@@ -122,9 +122,12 @@ export class QuestionService {
           });
         }
       },
-      relations: ['choices', 'answers'],
+      relations: ['choices', 'answers', 'categories', 'categories.category'],
     };
-    return queryWithPagination<number, Question>(
+    const { items = [], total = 0 } = await queryWithPagination<
+      number,
+      Question
+    >(
       this.questionRepository,
       lastCursor,
       order.toUpperCase() as 'ASC' | 'DESC',
@@ -138,6 +141,17 @@ export class QuestionService {
         page,
       },
     );
+    return {
+      total,
+      items: items.map((item) => {
+        return {
+          ..._.omit(item, ['categories']),
+          categories: (item.categories || []).map(
+            (category) => category.category,
+          ),
+        };
+      }),
+    };
   }
 
   async getQuestion(creator: User, id: number) {
