@@ -14,7 +14,7 @@ import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
 import { RoleService } from 'src/role/role.service';
 import { CurrentUser } from 'src/user/user.decorator';
-import { PaperService } from './paper.service';
+import { PaperService, QuestionData } from './paper.service';
 
 @Controller('/api/paper')
 @UseGuards(AuthGuard('jwt'), RoleGuard)
@@ -74,15 +74,13 @@ export class PaperController {
   @Role('resource/paper/owner', 'resource/paper/maintainer')
   async createPaperQuestion(
     @Param('paper') paperId: number,
-    @Body('question') questionId: number,
+    @Body('data') data: QuestionData[],
     @Body('missed_choices_score') missedChoicesScore: number,
-    @Body('order') order: number,
   ) {
     return await this.paperService.createPaperQuestion(
       paperId,
-      questionId,
+      data,
       missedChoicesScore,
-      order,
     );
   }
 

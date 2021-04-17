@@ -10,6 +10,11 @@ import { Paper } from './paper.entity';
 import { PaperQuestion } from './paper_question.entity';
 import { PaperUser } from './paper_user.entity';
 
+export interface QuestionData {
+  id: number;
+  points: number;
+}
+
 @Injectable()
 export class PaperService {
   constructor(
@@ -147,33 +152,51 @@ export class PaperService {
 
   async createPaperQuestion(
     paperId: number,
-    questionId: number,
+    questionDataItems: QuestionData[],
     missedChoicesScore: number,
-    order: number,
   ) {
-    const paper = await this.paperRepository.findOne({ id: paperId });
-    const question = await this.questionRepository.findOne({ id: questionId });
+    const getPoints = (id: number) => {
+      const item = questionDataItems.find((item) => item.id === id);
+      if (item) {
+        return item.points || 0;
+      } else {
+        return 0;
+      }
+    };
 
-    if (
-      !(await this.paperQuestionRepository.findOne({
-        where: {
-          paper: {
-            id: paper.id,
-          },
-          question: {
-            id: question.id,
-          },
+    const paper = await this.paperRepository.findOne({ id: paperId });
+    const questions = await this.questionRepository.find({
+      where: {
+        id: In(questionDataItems.map((item) => item.id)),
+      },
+    });
+
+    const existedPaperQuestions = await this.paperQuestionRepository.find({
+      where: {
+        paper: {
+          id: paperId,
         },
-      }))
-    ) {
-      await this.paperQuestionRepository.save(
-        this.paperQuestionRepository.create({
-          paper,
-          question,
-          order,
-          missedChoicesScore,
-        }),
+      },
+    });
+
+    if (existedPaperQuestions.length > 0) {
+      await this.paperQuestionRepository.delete(
+        existedPaperQuestions.map((relation) => relation.id),
       );
+    }
+
+    const newRelations = questions.map((question, index) => {
+      return this.paperQuestionRepository.create({
+        paper,
+        question,
+        order: index + 1,
+        missedChoicesScore,
+        points: getPoints(question.id),
+      });
+    });
+
+    if (newRelations.length > 0) {
+      await this.paperQuestionRepository.save(newRelations);
     }
 
     return;
