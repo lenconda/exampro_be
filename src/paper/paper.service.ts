@@ -217,7 +217,12 @@ export class PaperService {
   }
 
   async getPaperQuestions(paperId: number, answers: boolean) {
-    const relations = ['question', 'question.choices', 'question.answers'];
+    const relations = [
+      'question',
+      'question.creator',
+      'question.choices',
+      'question.answers',
+    ];
     const paperQuestions = await this.paperQuestionRepository.find({
       where: {
         paper: {
