@@ -24,6 +24,9 @@ export class Paper {
   @Column()
   title: string;
 
+  @Column({ default: 0, name: 'missed_choices_score' })
+  missedChoicesScore: number;
+
   @Column({ default: false })
   banned: boolean;
 

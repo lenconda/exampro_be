@@ -30,10 +30,16 @@ export class PaperService {
     private readonly paperQuestionRepository: Repository<PaperQuestion>,
   ) {}
 
-  async createPaper(creator: User, title: string, isPublic: boolean) {
+  async createPaper(
+    creator: User,
+    title: string,
+    isPublic: boolean,
+    missedChoicesScore: number,
+  ) {
     const paper = this.paperRepository.create({
       title,
       public: isPublic,
+      missedChoicesScore,
     });
     await this.paperRepository.save(paper);
     const paperUser = this.paperUserRepository.create({
@@ -83,9 +89,17 @@ export class PaperService {
         },
       })
     ) {
+      const currentUpdates = _.pick(updates, [
+        'title',
+        'public',
+        'missed_choices_score',
+      ]);
       await this.paperRepository.update(
         { id: paperId },
-        _.pick(updates, ['title', 'public']),
+        Object.keys(currentUpdates).reduce((result, currentKey) => {
+          result[_.camelCase(currentKey)] = currentUpdates[currentKey];
+          return result;
+        }, {}),
       );
     }
   }
@@ -153,7 +167,6 @@ export class PaperService {
   async createPaperQuestion(
     paperId: number,
     questionDataItems: QuestionData[],
-    missedChoicesScore: number,
   ) {
     const getPoints = (id: number) => {
       const item = questionDataItems.find((item) => item.id === id);
@@ -190,7 +203,6 @@ export class PaperService {
         paper,
         question,
         order: index + 1,
-        missedChoicesScore,
         points: getPoints(question.id),
       });
     });
@@ -230,18 +242,22 @@ export class PaperService {
         },
       },
       order: {
-        'question.id': 'ASC',
+        order: 'ASC',
       } as any,
       relations,
     });
     const items = paperQuestions.map((paperQuestion) => {
-      const data = {
+      const question = {
         ...paperQuestion.question,
         ...(paperQuestion.question.type === 'fill_in_blank'
           ? {
               blankCount: paperQuestion.question.answers.length,
             }
           : {}),
+      };
+      const data = {
+        ...paperQuestion,
+        question,
       };
       return answers ? data : _.omit(data, ['answers']);
     });

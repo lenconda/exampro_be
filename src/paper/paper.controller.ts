@@ -57,8 +57,14 @@ export class PaperController {
     @CurrentUser() user,
     @Body('title') title: string,
     @Body('public') isPublic = false,
+    @Body('missed_choices_score') missedChoicesScore: number,
   ) {
-    return await this.paperService.createPaper(user, title, isPublic);
+    return await this.paperService.createPaper(
+      user,
+      title,
+      isPublic,
+      missedChoicesScore,
+    );
   }
 
   @Delete()
@@ -75,13 +81,8 @@ export class PaperController {
   async createPaperQuestion(
     @Param('paper') paperId: number,
     @Body('data') data: QuestionData[],
-    @Body('missed_choices_score') missedChoicesScore: number,
   ) {
-    return await this.paperService.createPaperQuestion(
-      paperId,
-      data,
-      missedChoicesScore,
-    );
+    return await this.paperService.createPaperQuestion(paperId, data);
   }
 
   @Delete('/:paper/questions')
