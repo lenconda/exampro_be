@@ -57,7 +57,7 @@ export class PaperController {
     @CurrentUser() user,
     @Body('title') title: string,
     @Body('public') isPublic = false,
-    @Body('missed_choices_score') missedChoicesScore: number,
+    @Body('missedChoicesScore') missedChoicesScore: number,
   ) {
     return await this.paperService.createPaper(
       user,

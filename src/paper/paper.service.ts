@@ -94,7 +94,7 @@ export class PaperService {
       const currentUpdates = _.pick(updates, [
         'title',
         'public',
-        'missed_choices_score',
+        'missedChoicesScore',
       ]);
       await this.paperRepository.update(
         { id: paperId },
@@ -295,6 +295,9 @@ export class PaperService {
         user: maintainer,
         paper: {
           id: paperId,
+        },
+        role: {
+          id: 'resource/paper/maintainer',
         },
       });
     });
