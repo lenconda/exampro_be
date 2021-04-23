@@ -113,10 +113,10 @@ export class PaperService {
       },
       relations: ['users', 'users.user', 'users.role'],
     });
-    const roles = data.users
+    const role = data.users
       .filter((userRole) => userRole.user.email === creator.email)
-      .map((userRole) => userRole.role);
-    return _.merge(_.omit(data, ['users']), { roles });
+      .map((userRole) => userRole.role)[0];
+    return _.merge(_.omit(data, ['users']), { role });
   }
 
   async queryPapers(
