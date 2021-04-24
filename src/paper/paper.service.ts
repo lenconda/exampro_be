@@ -160,10 +160,26 @@ export class PaperService {
             }
             return '';
           },
+          relations: ['users', 'users.role', 'users.user'],
         },
       },
     );
-    return data;
+    return {
+      items: data.items.map((item) => {
+        return {
+          ..._.omit(item, ['users']),
+          creator: _.get(
+            _.first(
+              item.users.filter(
+                (userRole) => userRole.role.id === 'resource/paper/owner',
+              ),
+            ),
+            'user',
+          ),
+        };
+      }),
+      total: data.total,
+    };
   }
 
   async createPaperQuestion(
