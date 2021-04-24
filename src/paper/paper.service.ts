@@ -116,7 +116,17 @@ export class PaperService {
     const role = data.users
       .filter((userRole) => userRole.user.email === creator.email)
       .map((userRole) => userRole.role)[0];
-    return _.merge(_.omit(data, ['users']), { role });
+    return _.merge(_.omit(data, ['users']), {
+      role,
+      creator: _.get(
+        _.first(
+          data.users.filter(
+            (userRole) => userRole.role.id === 'resource/paper/owner',
+          ),
+        ),
+        'user',
+      ),
+    });
   }
 
   async queryPapers(
@@ -175,6 +185,14 @@ export class PaperService {
               ),
             ),
             'user',
+          ),
+          role: _.get(
+            _.first(
+              item.users.filter(
+                (userRole) => userRole.user.email === user.email,
+              ),
+            ),
+            'role',
           ),
         };
       }),
@@ -282,7 +300,11 @@ export class PaperService {
     return { items };
   }
 
-  async createPaperMaintainers(paperId: number, maintainerEmails: string[]) {
+  async createPaperMaintainers(
+    creator: User,
+    paperId: number,
+    maintainerEmails: string[],
+  ) {
     const existedRelations = await this.paperUserRepository.find({
       where: {
         paper: {
@@ -306,17 +328,21 @@ export class PaperService {
       },
     });
 
-    const newRelations = maintainers.map((maintainer) => {
-      return this.paperUserRepository.create({
-        user: maintainer,
-        paper: {
-          id: paperId,
-        },
-        role: {
-          id: 'resource/paper/maintainer',
-        },
+    const newRelations = maintainers
+      .filter((maintainer) => {
+        return maintainer.email !== creator.email;
+      })
+      .map((maintainer) => {
+        return this.paperUserRepository.create({
+          user: maintainer,
+          paper: {
+            id: paperId,
+          },
+          role: {
+            id: 'resource/paper/maintainer',
+          },
+        });
       });
-    });
 
     if (newRelations.length > 0) {
       await this.paperUserRepository.save(newRelations);

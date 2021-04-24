@@ -14,6 +14,7 @@ import { Role } from 'src/role/role.decorator';
 import { RoleGuard } from 'src/role/role.guard';
 import { RoleService } from 'src/role/role.service';
 import { CurrentUser } from 'src/user/user.decorator';
+import { User } from 'src/user/user.entity';
 import { PaperService, QuestionData } from './paper.service';
 
 @Controller('/api/paper')
@@ -69,11 +70,8 @@ export class PaperController {
 
   @Delete()
   @Role('resource/paper/owner')
-  async deletePapers(@CurrentUser() user, @Body('papers') paperIds: string[]) {
-    return this.paperService.deletePapers(
-      user,
-      paperIds.map((paperId) => parseInt(paperId)),
-    );
+  async deletePapers(@CurrentUser() user, @Body('papers') paperIds: number[]) {
+    return this.paperService.deletePapers(user, paperIds);
   }
 
   @Post('/:paper/questions')
@@ -123,9 +121,14 @@ export class PaperController {
   @Role('resource/paper/owner')
   async createPaperMaintainers(
     @Param('paper') paperId: number,
+    @CurrentUser() user: User,
     @Body('emails') maintainerEmails: string[] = [],
   ) {
-    return this.paperService.createPaperMaintainers(paperId, maintainerEmails);
+    return this.paperService.createPaperMaintainers(
+      user,
+      paperId,
+      maintainerEmails,
+    );
   }
 
   @Delete('/:paper/maintainers')
