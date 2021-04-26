@@ -204,8 +204,9 @@ export class UserService {
   async complete(email: string, info: Record<string, any>) {
     const userInfo = await this.userRepository.findOne({
       where: { email },
-      select: ['password'],
+      select: ['email', 'password'],
     });
+    console.log(userInfo, email);
     if (!userInfo) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
