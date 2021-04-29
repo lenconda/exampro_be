@@ -19,7 +19,8 @@ import { UserModule } from 'src/user/user.module';
     UserModule,
     TypeOrmModule.forFeature([User, UserRole, Role]),
     JwtModule.registerAsync({
-      useFactory: (config: ConfigService) => config.get('jwt'),
+      useFactory: (config: ConfigService) =>
+        config.get('jwt') as Record<string, any>,
       inject: [ConfigService],
     }),
   ],

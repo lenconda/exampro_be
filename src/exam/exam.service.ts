@@ -245,6 +245,7 @@ export class ExamService {
             }
             return '';
           },
+          relations: ['paper'],
         },
       },
     );

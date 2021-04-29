@@ -23,7 +23,11 @@ export class MailService {
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
   ) {
-    const { name, mailSender: sender, hostname } = configService.get();
+    const {
+      name,
+      mailSender: sender,
+      hostname,
+    } = configService.get() as Record<string, any>;
     this.name = name;
     this.sender = sender;
     this.hostname = hostname;

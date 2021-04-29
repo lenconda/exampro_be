@@ -10,7 +10,7 @@ export class ConfigService {
 
   private config: Record<string, any> = {};
 
-  public get(path?: string): Record<string, any> {
+  public get(path?: string): Record<string, any> | string {
     if (!path) {
       return this.config;
     }

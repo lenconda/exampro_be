@@ -14,12 +14,17 @@ import {
   ERR_EMAIL_VERIFICATION_REQUIRED,
   ERR_USER_PASSWORD_NOT_SET,
 } from './constants';
+import ms from 'ms';
+import { ConfigService } from './config/config.service';
 
 export type Response = Record<string, any>;
 
 @Injectable()
 export class AppInterceptor<T> implements NestInterceptor<T, Response> {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async intercept(
     context: ExecutionContext,
@@ -80,13 +85,18 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
 
     if (token && email) {
       const payload = this.authService.decode(token);
-      const { exp = Date.now() / 1000 } = payload as Record<string, any>;
-      const expireTimestamp = exp * 1000;
+      const { iat = Date.now() / 1000 } = payload as Record<string, any>;
+      const issuedTimestamp = iat * 1000;
+      const expireMilliseconds = ms(
+        (this.configService.get('jwt.signOptions.expiresIn') as string) ||
+          '7 days',
+      );
+      const expiredTimestamp = issuedTimestamp + expireMilliseconds;
 
       /**
        * 如果当前 token 还差一分钟就要过期，则更新一次 token
        */
-      if (expireTimestamp - Date.now() < 60000) {
+      if (expiredTimestamp - Date.now() < 60000) {
         additionalResponseData.token = this.authService.sign(email);
       }
     }

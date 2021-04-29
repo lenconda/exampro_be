@@ -50,7 +50,10 @@ export class AppService {
   }
 
   private async initializeRootAdmin() {
-    const { email, password } = this.configService.get('rootAdmin');
+    const { email, password } = this.configService.get('rootAdmin') as Record<
+      string,
+      any
+    >;
     const admin = this.userRepository.create({
       email,
       name: 'root',

@@ -33,7 +33,7 @@ import { ResourceModule } from './resource/resource.module';
     TypeOrmModule.forRootAsync({
       useFactory: async (config: ConfigService) => {
         return {
-          ...config.get('db'),
+          ...(config.get('db') as Record<string, any>),
           entities: getMetadataArgsStorage().tables.map(
             (table) => table.target,
           ),
@@ -47,7 +47,7 @@ import { ResourceModule } from './resource/resource.module';
     RedisModule.forRootAsync({
       useFactory: async (config: ConfigService) => {
         return {
-          ...config.get('redis'),
+          ...(config.get('redis') as Record<string, any>),
           connectTimeout: 0,
           maxRetriesPerRequest: 20,
           enableOfflineQueue: false,
