@@ -106,7 +106,7 @@ export class ExamService {
           id: examId,
         },
       },
-      relations: ['exam', 'role'],
+      relations: ['exam', 'role', 'exam.paper'],
     });
     const { exam: examInfo = {}, role = {} } = result;
     return {
