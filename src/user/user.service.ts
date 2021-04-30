@@ -206,7 +206,6 @@ export class UserService {
       where: { email },
       select: ['email', 'password'],
     });
-    console.log(userInfo, email);
     if (!userInfo) {
       throw new BadRequestException(ERR_ACCOUNT_NOT_FOUND);
     }
