@@ -280,7 +280,7 @@ export class ExamController {
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
     @Query('roles')
-    roles = 'resource/exam/participant,resource/exam/reviewer,resource/exam/invigilator,resource/exam/initiator',
+    roles = 'resource/exam/participant,resource/exam/reviewer,resource/exam/invigilator,resource/exam/initiator,resource/exam/maintainer',
     @Query('page') page = '0',
   ) {
     const roleIds = roles ? roles.split(',') : [];
