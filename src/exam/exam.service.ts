@@ -261,6 +261,7 @@ export class ExamService {
                 roleIds,
               });
             }
+            qb.andWhere('users.confirmed = 1');
             return '';
           },
           relations: ['paper'],
@@ -389,7 +390,7 @@ export class ExamService {
     emailsToBeDeleted = _.difference(existedEmails, emails);
 
     if (type === 'participant' && emailsToBeRegistered.length > 0) {
-      await this.authService.register(emailsToBeRegistered, false);
+      await this.authService.register(emailsToBeRegistered, true);
       emailsToBeInserted = emailsToBeInserted.concat(emailsToBeRegistered);
     }
 
@@ -405,6 +406,8 @@ export class ExamService {
           exam: {
             id: examId,
           },
+          // TODO: 目前写死，不支持确认邮件
+          confirmed: true,
         });
       });
       await this.examUserRepository.save(newRelations);

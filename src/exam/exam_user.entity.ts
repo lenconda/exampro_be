@@ -17,7 +17,7 @@ export class ExamUser {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: null, nullable: true })
+  @Column({ default: true, nullable: false })
   confirmed: boolean;
 
   @Column({ name: 'left_times', default: 0 })
