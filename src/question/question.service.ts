@@ -148,12 +148,17 @@ export class QuestionService {
     return {
       total,
       items: items.map((item) => {
-        return {
-          ..._.omit(item, ['categories']),
-          categories: (item.categories || []).map(
-            (category) => category.category,
-          ),
-        };
+        return _.merge(
+          _.omit(item, ['categories']),
+          item.type === 'fill_in_blank'
+            ? { blankCount: item.answers.length }
+            : {},
+          {
+            categories: (item.categories || []).map(
+              (category) => category.category,
+            ),
+          },
+        );
       }),
     };
   }
