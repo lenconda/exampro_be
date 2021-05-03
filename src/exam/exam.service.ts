@@ -238,7 +238,8 @@ export class ExamService {
       size,
       {
         search,
-        searchColumns: ['title'],
+        searchColumns: ['exams.title'],
+        searchWithAlias: true,
         cursorColumn: 'exams.id',
         orderColumn: 'id',
         page,
