@@ -13,6 +13,7 @@ import {
 import { MailService } from 'src/mail/mail.service';
 import { PaperUser } from 'src/paper/paper_user.entity';
 import { User } from 'src/user/user.entity';
+import { snakeToCamel } from 'src/utils/objects';
 import { queryWithPagination } from 'src/utils/pagination';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Exam } from './exam.entity';
@@ -34,14 +35,23 @@ export class ExamService {
   ) {}
 
   async createExam(creator: User, info: Record<string, any>) {
-    const basicData = _.pick(info, ['title', 'grades', 'duration']);
+    const basicData = _.pick(info, [
+      'title',
+      'grades',
+      'duration',
+      'notify_participants',
+      'public',
+      'delay',
+    ]);
     const startTime = info.start_time ? new Date(info.start_time) : null;
     const endTime = info.end_time ? new Date(info.end_time) : null;
-    const exam = this.examRepository.create({
-      ...basicData,
-      startTime,
-      endTime,
-    });
+    const exam = this.examRepository.create(
+      snakeToCamel({
+        ...basicData,
+        startTime,
+        endTime,
+      }),
+    );
     await this.examRepository.save(exam);
     const examUser = this.examUserRepository.create({
       exam: {
@@ -196,10 +206,17 @@ export class ExamService {
       }
       await this.examRepository.update(
         { id: examId },
-        {
-          ..._.pick(updates, ['title', 'grades', 'duration']),
+        snakeToCamel({
+          ..._.pick(updates, [
+            'title',
+            'grades',
+            'duration',
+            'notify_participants',
+            'public',
+            'delay',
+          ]),
           ...timeUpdates,
-        },
+        }),
       );
       return;
     }
@@ -327,88 +344,92 @@ export class ExamService {
       'invigilator',
       'reviewer',
     ];
-    if (allowedTypes.indexOf(type) === -1) {
+    if (allowedTypes.indexOf(type) === -1 || emails.length === 0) {
       return {
         items: [],
         total: 0,
       };
     }
-    const roleIdFilter = (type: string, id: string) => {
-      if (type === 'participant') {
-        return In(allowedTypes.map((type) => `resource/exam/${type}`));
-      }
-      if (type === 'reviewer') {
-        return In(['resource/exam/reviewer', 'resource/exam/participant']);
-      }
-      return id;
-    };
+
     const roleId = `resource/exam/${type}`;
-    const registeredUserEmails = (
-      await this.userRepository.find({
-        where: {
-          email: In(emails),
+
+    let emailsToBeInserted = [];
+    let emailsToBeRegistered = [];
+    let emailsToBeDeleted = [];
+
+    const existedRelations = await this.examUserRepository.find({
+      where: {
+        exam: {
+          id: examId,
         },
-      })
-    ).map((user) => user.email);
-    const existedEmails = (
-      await this.examUserRepository.find({
+        role: {
+          id: `resource/exam/${type}`,
+        },
+      },
+      relations: ['user'],
+    });
+    const existedEmails = existedRelations.map(
+      (relation) => relation.user.email,
+    );
+    const registeredUsers = await this.userRepository.find({
+      where: {
+        email: In(emails),
+      },
+    });
+    emailsToBeRegistered = _.difference(
+      emails,
+      registeredUsers.map((user) => user.email),
+    );
+    emailsToBeInserted = _.difference(
+      emails,
+      emailsToBeRegistered,
+      existedEmails,
+    );
+    emailsToBeDeleted = _.difference(existedEmails, emails);
+
+    if (type === 'participant' && emailsToBeRegistered.length > 0) {
+      await this.authService.register(emailsToBeRegistered, false);
+      emailsToBeInserted = emailsToBeInserted.concat(emailsToBeRegistered);
+    }
+
+    if (emailsToBeInserted.length > 0) {
+      const newRelations = emailsToBeInserted.map((email) => {
+        return this.examUserRepository.create({
+          user: {
+            email,
+          },
+          role: {
+            id: roleId,
+          },
+          exam: {
+            id: examId,
+          },
+        });
+      });
+      await this.examUserRepository.save(newRelations);
+    }
+
+    if (emailsToBeDeleted.length > 0) {
+      const relations = await this.examUserRepository.find({
         where: {
           exam: {
             id: examId,
           },
           user: {
-            email: In(emails),
+            email: In(emailsToBeDeleted),
           },
           role: {
-            id: roleIdFilter(type, roleId),
+            id: roleId,
           },
         },
-        relations: ['user'],
-      })
-    ).map((maintainer) => maintainer.user.email);
-
-    let insertedEmails = [];
-    let unregisteredEmails = [];
-
-    if (type !== 'participant') {
-      insertedEmails = _.difference(registeredUserEmails, existedEmails);
-    } else {
-      insertedEmails = _.difference(emails, existedEmails);
-      unregisteredEmails = _.difference(insertedEmails, registeredUserEmails);
-      await this.authService.register(unregisteredEmails, false);
-      const exam = await this.examRepository.findOne({
-        where: {
-          id: examId,
-        },
       });
-      if (exam.notifyParticipants && !exam.public) {
-        const items = insertedEmails.map((email) => ({
-          email,
-          exam,
-          ...(unregisteredEmails.indexOf(email) !== -1
-            ? {
-                token: this.authService.sign(email),
-              }
-            : {}),
-        }));
-        await this.mailService.sendExamConfirmationMail(items);
+      if (relations.length > 0) {
+        await this.examUserRepository.delete(
+          relations.map((relation) => relation.id),
+        );
       }
     }
-    if (insertedEmails.length > 0) {
-      await this.examUserRepository.save(
-        insertedEmails.map((email) => {
-          return this.examUserRepository.create({
-            user: { email },
-            exam: {
-              id: examId,
-            },
-            role: {
-              id: roleId,
-            },
-          });
-        }),
-      );
-    }
+
     return;
   }
 

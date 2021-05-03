@@ -38,11 +38,11 @@ export class ExamController {
     return await this.roleService.getResourceRoles('exam');
   }
 
-  @Post('/paper')
+  @Post('/:exam/paper')
   @Role('resource/exam/initiator', 'resource/exam/maintainer')
   async createExamPaper(
     @CurrentUser() user: User,
-    @Body('exam') examId: number,
+    @Param('exam') examId: number,
     @Body('paper') paperId: number,
   ) {
     return await this.examService.createExamPaper(user, examId, paperId);
