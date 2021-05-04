@@ -214,11 +214,6 @@ export class PaperService {
     };
 
     const paper = await this.paperRepository.findOne({ id: paperId });
-    const questions = await this.questionRepository.find({
-      where: {
-        id: In(questionDataItems.map((item) => item.id)),
-      },
-    });
 
     const existedPaperQuestions = await this.paperQuestionRepository.find({
       where: {
@@ -234,10 +229,12 @@ export class PaperService {
       );
     }
 
-    const newRelations = questions.map((question, index) => {
+    const newRelations = questionDataItems.map((question, index) => {
       return this.paperQuestionRepository.create({
         paper,
-        question,
+        question: {
+          id: question.id,
+        },
         order: index + 1,
         points: getPoints(question.id),
       });
