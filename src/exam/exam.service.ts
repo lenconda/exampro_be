@@ -118,10 +118,23 @@ export class ExamService {
       },
       relations: ['exam', 'role', 'exam.paper'],
     });
+    const examInitiator = await this.examUserRepository.findOne({
+      where: {
+        role: {
+          id: 'resource/exam/initiator',
+        },
+        exam: {
+          id: examId,
+        },
+      },
+      relations: ['user'],
+    });
     const { exam: examInfo = {}, role = {} } = result;
     return {
       ...examInfo,
       role,
+      initiator: examInitiator.user,
+      userExam: _.omit(result, ['exam', 'role']),
     };
   }
 

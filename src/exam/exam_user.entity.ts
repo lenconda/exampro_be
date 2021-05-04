@@ -23,6 +23,9 @@ export class ExamUser {
   @Column({ name: 'left_times', default: 0 })
   leftTimes: number;
 
+  @Column({ name: 'start_time', nullable: true, default: null })
+  startTime: Date;
+
   @ManyToOne(() => Role, (role) => role.id, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',

@@ -252,6 +252,7 @@ export class ExamController {
     'resource/exam/initiator',
     'resource/exam/maintainer',
     'resource/exam/reviewer',
+    'resource/exam/invigilator',
     'resource/exam/participant',
   )
   async getExam(@CurrentUser() user: User, @Param('exam') examId: number) {
