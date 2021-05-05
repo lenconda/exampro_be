@@ -119,6 +119,7 @@ export class ExamResultService {
         result[currentQuestionId] = {
           answer: [],
           scores: currentItem.score,
+          points: currentItem.paperQuestion.points,
         };
       }
       if (!_.isArray(result[currentQuestionId].answer)) {
