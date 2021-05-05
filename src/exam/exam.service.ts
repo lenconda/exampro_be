@@ -553,4 +553,41 @@ export class ExamService {
       await this.examUserRepository.save(examUser);
     }
   }
+
+  async startExam(participant: User, examId: number) {
+    const examUser = await this.examUserRepository.findOne({
+      where: {
+        exam: {
+          id: examId,
+        },
+        user: {
+          email: participant.email,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+      },
+      relations: ['exam'],
+    });
+    const { exam, startTime } = examUser;
+    const { startTime: examStartTime, endTime } = exam;
+    const currentTime = new Date();
+    if (
+      !examUser ||
+      startTime ||
+      !(
+        currentTime.getMilliseconds() > examStartTime.getMilliseconds() &&
+        currentTime.getMilliseconds() < endTime.getMilliseconds()
+      )
+    ) {
+      return;
+    }
+    await this.examUserRepository.update(
+      { id: examUser.id },
+      {
+        startTime: currentTime,
+      },
+    );
+    return;
+  }
 }

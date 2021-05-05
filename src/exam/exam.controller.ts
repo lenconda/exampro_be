@@ -308,4 +308,12 @@ export class ExamController {
       examId,
     );
   }
+
+  @Post('/:exam/start')
+  async startExam(
+    @CurrentUser() participant: User,
+    @Param('exam') examId: number,
+  ) {
+    return await this.examService.startExam(participant, examId);
+  }
 }
