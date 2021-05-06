@@ -292,7 +292,7 @@ export class PaperService {
         ...paperQuestion,
         question,
       };
-      return answers ? data : _.omit(data, ['answers']);
+      return answers ? data : _.omit(data, ['question.answers']);
     });
     return { items };
   }
