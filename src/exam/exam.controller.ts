@@ -255,8 +255,12 @@ export class ExamController {
     'resource/exam/invigilator',
     'resource/exam/participant',
   )
-  async getExam(@CurrentUser() user: User, @Param('exam') examId: number) {
-    return await this.examService.getExam(user, examId);
+  async getExam(
+    @CurrentUser() user: User,
+    @Param('exam') examId: number,
+    @Query('role') roleId: string,
+  ) {
+    return await this.examService.getExam(user, examId, roleId);
   }
 
   @Post()

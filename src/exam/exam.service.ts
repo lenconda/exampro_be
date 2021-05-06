@@ -102,7 +102,7 @@ export class ExamService {
     }
   }
 
-  async getExam(user: User, examId: number) {
+  async getExam(user: User, examId: number, roleId?: string) {
     const exam = await this.examRepository.findOne({ id: examId });
     if (exam.public) {
       return { exam };
@@ -115,6 +115,13 @@ export class ExamService {
         exam: {
           id: examId,
         },
+        ...(roleId
+          ? {
+              role: {
+                id: roleId,
+              },
+            }
+          : {}),
       },
       relations: ['exam', 'role', 'exam.paper'],
     });
