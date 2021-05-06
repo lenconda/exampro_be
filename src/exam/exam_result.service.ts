@@ -6,6 +6,7 @@ import { User } from 'src/user/user.entity';
 import { In, Repository } from 'typeorm';
 import { Exam } from './exam.entity';
 import { ExamResult } from './exam_result.entity';
+import { ExamUser } from './exam_user.entity';
 
 export type QuestionAnswer = Record<string, string[]>;
 export type QuestionScore = Record<string, number>;
@@ -19,6 +20,8 @@ export class ExamResultService {
     private readonly examResultRepository: Repository<ExamResult>,
     @InjectRepository(PaperQuestion)
     private readonly paperQuestionRepository: Repository<PaperQuestion>,
+    @InjectRepository(ExamUser)
+    private readonly examUserRepository: Repository<ExamUser>,
   ) {}
 
   async createExamAnswer(
@@ -36,8 +39,31 @@ export class ExamResultService {
         },
       },
     });
+    const examUser = await this.examUserRepository.findOne({
+      where: {
+        user: {
+          email: participant.email,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+        exam: {
+          id: examId,
+        },
+      },
+    });
+    if (examUser) {
+      await this.examUserRepository.update(
+        { id: examUser.id },
+        {
+          submitTime: new Date(),
+        },
+      );
+    }
     if (existedExamResults.length > 0) {
-      return;
+      await this.examResultRepository.delete(
+        existedExamResults.map((relation) => relation.id),
+      );
     }
     const exam = await this.examRepository.findOne({
       where: {

@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -27,6 +28,11 @@ export class UserController {
   @Get('/profile')
   async getProfile(@CurrentUser() user: User) {
     return await this.userRepository.findOne({ email: user.email });
+  }
+
+  @Get('/profile/:email')
+  async getUserProfileDetail(@Param('email') email: string) {
+    return await this.userRepository.findOne({ email });
   }
 
   @Get('/list')

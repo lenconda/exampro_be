@@ -576,25 +576,31 @@ export class ExamService {
       },
       relations: ['exam'],
     });
-    const { exam, startTime } = examUser;
-    const { startTime: examStartTime, endTime } = exam;
+    const { exam, submitTime } = examUser;
+    const { startTime: examStartTime, endTime: examEndTime } = exam;
     const currentTime = new Date();
+    const currentTimestamp = Date.parse(currentTime.toISOString());
+    const examStartTimestamp = Date.parse(examStartTime.toISOString());
+    const examEndTimestamp = Date.parse(examEndTime.toISOString());
+
     if (
       !examUser ||
-      startTime ||
+      submitTime ||
       !(
-        currentTime.getMilliseconds() > examStartTime.getMilliseconds() &&
-        currentTime.getMilliseconds() < endTime.getMilliseconds()
+        currentTimestamp >= examStartTimestamp &&
+        currentTimestamp <= examEndTimestamp
       )
     ) {
-      return;
+      throw new ForbiddenException();
     }
+
     await this.examUserRepository.update(
       { id: examUser.id },
       {
         startTime: currentTime,
       },
     );
+
     return;
   }
 }

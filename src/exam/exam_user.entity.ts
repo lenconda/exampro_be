@@ -26,6 +26,9 @@ export class ExamUser {
   @Column({ name: 'start_time', nullable: true, default: null })
   startTime: Date;
 
+  @Column({ name: 'submit_time', nullable: true, default: null })
+  submitTime: Date;
+
   @ManyToOne(() => Role, (role) => role.id, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',
