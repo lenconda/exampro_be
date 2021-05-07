@@ -18,6 +18,7 @@ import { queryWithPagination } from 'src/utils/pagination';
 import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { Exam } from './exam.entity';
 import { ExamUser } from './exam_user.entity';
+import moment from 'moment';
 
 @Injectable()
 export class ExamService {
@@ -45,11 +46,18 @@ export class ExamService {
     ]);
     const startTime = info.start_time ? new Date(info.start_time) : null;
     const endTime = info.end_time ? new Date(info.end_time) : null;
+    if (!endTime) {
+      throw new BadRequestException();
+    }
+    const resultTime = info.result_time
+      ? new Date(info.result_time)
+      : moment(endTime).add(1, 'week').toDate();
     const exam = this.examRepository.create(
       snakeToCamel({
         ...basicData,
         startTime,
         endTime,
+        resultTime,
       }),
     );
     await this.examRepository.save(exam);
@@ -223,6 +231,9 @@ export class ExamService {
       }
       if (updates.end_time && Boolean(updates.end_time)) {
         timeUpdates.endTime = new Date(updates.end_time);
+      }
+      if (updates.end_time && Boolean(updates.result_time)) {
+        timeUpdates.resultTIme = new Date(updates.result_time);
       }
       await this.examRepository.update(
         { id: examId },
