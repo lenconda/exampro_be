@@ -233,7 +233,7 @@ export class ExamService {
         timeUpdates.endTime = new Date(updates.end_time);
       }
       if (updates.end_time && Boolean(updates.result_time)) {
-        timeUpdates.resultTIme = new Date(updates.result_time);
+        timeUpdates.resultTime = new Date(updates.result_time);
       }
       await this.examRepository.update(
         { id: examId },

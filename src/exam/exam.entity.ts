@@ -37,7 +37,7 @@ export class Exam {
   endTime: Date;
 
   @Column({ name: 'result_time', nullable: true })
-  resultTIme: Date;
+  resultTime: Date;
 
   // 是否需要计算成绩
   @Column({ default: true })
