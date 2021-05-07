@@ -133,6 +133,9 @@ export class ExamService {
       },
       relations: ['exam', 'role', 'exam.paper'],
     });
+    if (!result) {
+      throw new ForbiddenException();
+    }
     const examInitiator = await this.examUserRepository.findOne({
       where: {
         role: {
