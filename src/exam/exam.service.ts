@@ -465,6 +465,8 @@ export class ExamService {
     order: 'asc' | 'desc',
     type: string,
     page,
+    relation = 'user',
+    scope = 'all',
   ) {
     const allowedTypes = [
       'maintainer',
@@ -502,15 +504,21 @@ export class ExamService {
             qb.andWhere('role.id = :roleId', {
               roleId: `resource/exam/${type}`,
             });
+            if (scope !== 'all') {
+              qb.andWhere('items.reviewing = :value', {
+                value: scope === 'unlocked_only' ? 0 : 1,
+              });
+            }
           },
           relations: ['user'],
         },
         page,
       },
     );
+    const { items, total } = data;
     return {
-      items: data.items.map((item) => item.user),
-      total: data.total,
+      items: relation === 'user' ? items.map((item) => item.user) : items,
+      total,
     };
   }
 

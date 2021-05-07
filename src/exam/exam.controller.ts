@@ -221,19 +221,23 @@ export class ExamController {
     @Param('type') type: string,
     @Query('last_cursor') lastCursor = '',
     @Query('page') page = '0',
-    @Query('size') size = 10,
+    @Query('size') size = '10',
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
+    @Query('relation') relation: 'user' | 'exam_user' = 'user',
+    @Query('scope') scope: 'all' | 'unlocked_only' | 'locked_only',
   ) {
     const cursor = lastCursor ? parseInt(lastCursor) : null;
     return await this.examService.queryExamUsers(
       examId,
       cursor,
-      size,
+      parseInt(size, 10),
       search,
       order,
       type,
       parseInt(page),
+      relation,
+      scope,
     );
   }
 

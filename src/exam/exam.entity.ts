@@ -36,6 +36,9 @@ export class Exam {
   @Column({ name: 'end_time', nullable: false })
   endTime: Date;
 
+  @Column({ name: 'result_time', nullable: true })
+  resultTIme: Date;
+
   // 是否需要计算成绩
   @Column({ default: true })
   grades: boolean;
