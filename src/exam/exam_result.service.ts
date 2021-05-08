@@ -158,21 +158,19 @@ export class ExamResultService {
     });
     return examPaperQuestions.reduce((result, currentItem) => {
       const currentQuestionId = currentItem.question.id;
-      const currentResultItem = resultItems.find(
+      const currentResultItems = resultItems.filter(
         (item) => item.paperQuestion.question.id === currentQuestionId,
       );
       if (!result[currentQuestionId]) {
         result[currentQuestionId.toString()] = {
-          answer: [],
-          scores: currentResultItem ? currentResultItem.score : 0,
+          answer: currentResultItems.map((item) => item.content),
+          scores:
+            currentResultItems.length > 0 ? currentResultItems[0].score : 0,
           points: currentItem.points,
         };
       }
       if (!_.isArray(result[currentQuestionId].answer)) {
         result[currentQuestionId].answer = [];
-      }
-      if (currentResultItem) {
-        result[currentQuestionId].answer.push(currentResultItem.content);
       }
       return result;
     }, {});
