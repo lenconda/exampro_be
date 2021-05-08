@@ -123,7 +123,24 @@ export class ExamResultService {
   }
 
   async getParticipantExamResult(examId: number, email: string) {
-    const items = await this.examResultRepository.find({
+    const exam = await this.examRepository.findOne({
+      where: {
+        id: examId,
+      },
+      relations: ['paper'],
+    });
+    if (!exam) {
+      return {};
+    }
+    const examPaperQuestions = await this.paperQuestionRepository.find({
+      where: {
+        paper: {
+          id: exam.paper.id,
+        },
+      },
+      relations: ['question', 'paper'],
+    });
+    const resultItems = await this.examResultRepository.find({
       where: {
         exam: {
           id: examId,
@@ -139,22 +156,24 @@ export class ExamResultService {
         'paperQuestion.question',
       ],
     });
-    return items.reduce((result, currentItem) => {
-      const currentQuestionId = currentItem.paperQuestion.question.id.toString();
+    return examPaperQuestions.reduce((result, currentItem) => {
+      const currentQuestionId = currentItem.question.id;
+      const currentResultItem = resultItems.find(
+        (item) => item.paperQuestion.question.id === currentQuestionId,
+      );
       if (!result[currentQuestionId]) {
-        result[currentQuestionId] = {
+        result[currentQuestionId.toString()] = {
           answer: [],
-          scores: currentItem.score,
-          points: currentItem.paperQuestion.points,
+          scores: currentResultItem ? currentResultItem.score : 0,
+          points: currentItem.points,
         };
       }
       if (!_.isArray(result[currentQuestionId].answer)) {
         result[currentQuestionId].answer = [];
       }
-      if (!result[currentQuestionId].scores) {
-        result[currentQuestionId].scores = currentItem.score;
+      if (currentResultItem) {
+        result[currentQuestionId].answer.push(currentResultItem.content);
       }
-      result[currentQuestionId].answer.push(currentItem.content);
       return result;
     }, {});
   }
