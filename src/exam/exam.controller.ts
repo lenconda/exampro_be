@@ -324,4 +324,17 @@ export class ExamController {
   ) {
     return await this.examService.startExam(participant, examId);
   }
+
+  @Post('/:exam/review/:participant')
+  async startReviewExam(
+    @CurrentUser() reviewer: User,
+    @Param('exam') examId: number,
+    @Param('participant') participantEmail: string,
+  ) {
+    return await this.examService.startReviewExam(
+      reviewer,
+      examId,
+      participantEmail,
+    );
+  }
 }

@@ -625,4 +625,49 @@ export class ExamService {
 
     return;
   }
+
+  async startReviewExam(
+    reviewer: User,
+    examId: number,
+    participantEmail: string,
+  ) {
+    const reviewerUserExam = await this.examUserRepository.findOne({
+      where: {
+        user: {
+          email: reviewer.email,
+        },
+        exam: {
+          id: examId,
+        },
+        role: {
+          id: 'resource/exam/reviewer',
+        },
+      },
+    });
+    if (!reviewerUserExam) {
+      throw new ForbiddenException();
+    }
+    const participantUserExam = await this.examUserRepository.findOne({
+      where: {
+        user: {
+          email: participantEmail,
+        },
+        exam: {
+          id: examId,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+      },
+    });
+    if (!participantUserExam || participantUserExam.reviewing) {
+      throw new ForbiddenException();
+    }
+    await this.examUserRepository.update(
+      { id: participantUserExam.id },
+      {
+        reviewing: true,
+      },
+    );
+  }
 }

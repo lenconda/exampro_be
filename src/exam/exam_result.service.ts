@@ -177,6 +177,29 @@ export class ExamResultService {
   }
 
   async putScores(examId: number, email: string, score: QuestionScore) {
+    const userExam = await this.examUserRepository.findOne({
+      where: {
+        exam: {
+          id: examId,
+        },
+        user: {
+          email,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+      },
+    });
+    if (userExam) {
+      this.examUserRepository.update(
+        {
+          id: userExam.id,
+        },
+        {
+          reviewing: false,
+        },
+      );
+    }
     const exam = await this.examRepository.findOne({
       where: { id: examId },
       relations: ['paper'],

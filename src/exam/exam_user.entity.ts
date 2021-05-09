@@ -29,7 +29,7 @@ export class ExamUser {
   @Column({ name: 'submit_time', nullable: true, default: null })
   submitTime: Date;
 
-  @Column({ default: false })
+  @Column({ default: false, nullable: false })
   reviewing: boolean;
 
   @ManyToOne(() => Role, (role) => role.id, {
