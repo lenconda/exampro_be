@@ -167,9 +167,7 @@ export class UserService {
       },
     );
     await this.mailService.sendChangeEmailMail(newEmail, token);
-    return {
-      token: this.authService.sign(newEmail),
-    };
+    return;
   }
 
   async completeChangeEmail(email: string) {
