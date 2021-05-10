@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -115,7 +111,7 @@ export class UserService {
     newPassword: string,
   ) {
     if (user.password !== md5(oldPassword)) {
-      throw new ForbiddenException(ERR_OLD_PASSWORD_MISMATCHED);
+      throw new BadRequestException(ERR_OLD_PASSWORD_MISMATCHED);
     }
     await this.userRepository.update(
       {
