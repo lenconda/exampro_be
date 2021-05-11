@@ -27,7 +27,7 @@ export class UserController {
 
   @Get('/profile')
   async getProfile(@CurrentUser() user: User) {
-    return await this.userRepository.findOne({ email: user.email });
+    return await this.userService.getUserProfile(user.email);
   }
 
   @Get('/profile/:email')
