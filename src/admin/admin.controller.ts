@@ -249,13 +249,13 @@ export class AdminController {
   @Delete('/role/:id')
   @Role('user/admin/system', 'user/admin/role')
   async deleteRole(@Param('id') id: string) {
-    return await this.roleService.deleteRoles([id]);
+    return await this.roleService.deleteRoles(id);
   }
 
   @Delete('/role')
   @Role('user/admin/system', 'user/admin/role')
-  async deleteRoles(@Body('id') ids: string[] = []) {
-    return await this.roleService.deleteRoles(ids);
+  async deleteRoles(@Body('id') id = '') {
+    return await this.roleService.deleteRoles(id);
   }
 
   @Get('/report')

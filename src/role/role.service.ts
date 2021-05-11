@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Role } from './role.entity';
 import _ from 'lodash';
 import { ERR_ROLE_ID_DUPLICATED, ERR_ROLE_NOT_FOUND } from 'src/constants';
@@ -84,9 +84,12 @@ export class RoleService {
     return;
   }
 
-  async deleteRoles(ids: string[]) {
+  async deleteRoles(id: string) {
+    if (!id) {
+      return;
+    }
     await this.roleRepository.delete({
-      id: In(ids),
+      id: Like(`${id}%`),
     });
   }
 
