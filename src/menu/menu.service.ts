@@ -4,11 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  ERR_MENU_NOT_FOUND,
-  ERR_MENU_PARENT_CIRCLED,
-  ERR_ROLE_NOT_FOUND,
-} from 'src/constants';
+import { ERR_MENU_NOT_FOUND, ERR_MENU_PARENT_CIRCLED } from 'src/constants';
 import { MenuRole } from 'src/role/menu_role.entity';
 import { Role } from 'src/role/role.entity';
 import { checkValueMatchPatterns } from 'src/utils/checkers';
@@ -36,47 +32,42 @@ export class MenuService {
     page,
   ) {
     const queryOrder = order.toUpperCase() as 'ASC' | 'DESC';
-    if (roleId) {
-      const role = await this.roleRepository.findOne({ id: roleId });
-      if (!role) {
-        throw new NotFoundException(ERR_ROLE_NOT_FOUND);
-      }
-      const result = await queryWithPagination<number, MenuRole>(
-        this.menuRoleRepository,
-        lastCursor,
-        queryOrder,
-        size,
-        {
-          cursorColumn: 'menu.id',
-          orderColumn: 'menu.id',
-          query: {
-            join: {
-              alias: 'items',
-              leftJoin: {
-                menu: 'items.menu',
-              },
+    const result = await queryWithPagination<number, Menu>(
+      this.menuRepository,
+      lastCursor,
+      queryOrder,
+      size,
+      {
+        cursorColumn: 'menus.id',
+        orderColumn: 'id',
+        searchWithAlias: true,
+        query: {
+          join: {
+            alias: 'menus',
+            leftJoin: {
+              roles: 'menus.menuRoles',
             },
-            where: { role },
-            relations: ['menu'],
           },
-          page,
+          where: roleId
+            ? (qb: SelectQueryBuilder<Menu>) => {
+                qb.andWhere('roles.role.id = :roleId', {
+                  roleId,
+                });
+                return '';
+              }
+            : {},
+          relations: ['parentMenu'],
         },
-      );
-      return {
-        items: result.items.map((item) => item.menu),
-        total: result.total || 0,
-      };
-    } else {
-      return queryWithPagination<number, Menu>(
-        this.menuRepository,
-        lastCursor,
-        queryOrder,
-        size,
-        {
-          page,
-        },
-      );
-    }
+        page,
+      },
+    );
+
+    const { items = [], total = 0 } = result;
+
+    return {
+      items,
+      total,
+    };
   }
 
   async createMenuItem(
