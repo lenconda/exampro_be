@@ -240,6 +240,27 @@ export class AdminController {
     );
   }
 
+  @Get('/menu/:menu/role')
+  @Role('user/admin/system', 'user/admin/layout')
+  async queryMenuRoles(
+    @Param('menu') menuId: number,
+    @Query('last_cursor') lastCursor = null,
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+    @Query('page') page = '0',
+  ) {
+    const cursor = lastCursor ? parseInt(lastCursor) : null;
+    return await this.menuService.queryMenuRoles(
+      cursor,
+      size,
+      order,
+      search,
+      menuId,
+      parseInt(page),
+    );
+  }
+
   @Patch('/role/:id')
   @Role('user/admin/system', 'user/admin/role')
   async updateRole(@Param('id') id: string, @Body() updates = {}) {

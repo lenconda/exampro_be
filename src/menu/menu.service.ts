@@ -179,4 +179,44 @@ export class MenuService {
     await this.menuRepository.delete(menus.map((menu) => menu.id));
     return;
   }
+
+  async queryMenuRoles(
+    lastCursor: number,
+    size: number,
+    order: 'asc' | 'desc',
+    search: string,
+    menuId: number,
+    page,
+  ) {
+    const data = await queryWithPagination<number, MenuRole>(
+      this.menuRoleRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        search,
+        searchColumns: ['role.id'],
+        cursorColumn: 'role.id',
+        query: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              role: 'items.role',
+            },
+          },
+          where: {
+            menu: {
+              id: menuId,
+            },
+          },
+          relations: ['role'],
+        },
+        page,
+      },
+    );
+    return {
+      total: data.total,
+      items: data.items.map((item) => item.role),
+    };
+  }
 }
