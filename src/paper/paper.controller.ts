@@ -112,6 +112,7 @@ export class PaperController {
     'resource/exam/initiator',
     'resource/exam/maintainer',
     'resource/exam/reviewer',
+    'resource/exam/participant',
   )
   async getPaperQuestionsWithAnswers(@Param('paper') paperId: number) {
     return await this.paperService.getPaperQuestions(paperId, true);
