@@ -39,7 +39,7 @@ export class MenuService {
       size,
       {
         cursorColumn: 'menus.id',
-        orderColumn: 'id',
+        orderColumn: 'order',
         searchWithAlias: true,
         query: {
           join: {
@@ -162,7 +162,7 @@ export class MenuService {
     await this.menuRepository.update(
       { id },
       _.merge(
-        _.pick(updates, ['title', 'icon', 'pathname', 'show']),
+        _.pick(updates, ['title', 'icon', 'pathname', 'show', 'order']),
         parentUpdates,
       ),
     );
