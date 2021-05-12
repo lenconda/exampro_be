@@ -214,9 +214,10 @@ export class MenuService {
         page,
       },
     );
+    const { total = 0, items = [] } = data;
     return {
-      total: data.total,
-      items: data.items.map((item) => item.role),
+      total,
+      items,
     };
   }
 }
