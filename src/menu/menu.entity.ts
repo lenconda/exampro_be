@@ -22,7 +22,7 @@ export class Menu {
   @Column({ nullable: true })
   icon: string;
 
-  @Column({ unique: true })
+  @Column()
   pathname: string;
 
   @Column({ default: true })
