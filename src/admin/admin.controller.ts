@@ -160,12 +160,8 @@ export class AdminController {
     'user/admin/layout',
     'user/admin/user',
   )
-  async getRoles(@Query('flatten') flatten = false) {
-    if (flatten) {
-      return await this.roleService.getFlattenedRoles();
-    } else {
-      return await this.roleService.getTreedRoles();
-    }
+  async getRoles() {
+    return await this.roleService.getFlattenedRoles();
   }
 
   @Post('/role/user')
