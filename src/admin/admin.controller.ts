@@ -266,6 +266,26 @@ export class AdminController {
     );
   }
 
+  @Get('/user/:email/role')
+  @Role('user/admin/system', 'user/admin/user')
+  async queryUserRoles(
+    @Param('email') email: string,
+    @Query('last_cursor') lastCursor = null,
+    @Query('size') size = 10,
+    @Query('search') search = '',
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+    @Query('page') page = '0',
+  ) {
+    return await this.userService.queryUserRoles(
+      lastCursor,
+      size,
+      order,
+      search,
+      email,
+      parseInt(page),
+    );
+  }
+
   @Patch('/role/:id')
   @Role('user/admin/system', 'user/admin/role')
   async updateRole(@Param('id') id: string, @Body() updates = {}) {

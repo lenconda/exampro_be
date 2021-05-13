@@ -103,7 +103,7 @@ export class RoleService {
           id: In(roleIds),
         },
       },
-      relations: ['menu', 'role'],
+      relations: ['role'],
     });
     const users = await this.userRepository.find({
       where: userEmails.map((email) => ({ email })),

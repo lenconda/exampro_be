@@ -229,4 +229,45 @@ export class UserService {
     });
     return;
   }
+
+  async queryUserRoles(
+    lastCursor: string,
+    size: number,
+    order: 'asc' | 'desc',
+    search: string,
+    email: string,
+    page,
+  ) {
+    const data = await queryWithPagination<string, UserRole>(
+      this.userRoleRepository,
+      lastCursor,
+      order.toUpperCase() as 'ASC' | 'DESC',
+      size,
+      {
+        search,
+        searchColumns: ['role.id'],
+        cursorColumn: 'role.id',
+        query: {
+          join: {
+            alias: 'items',
+            leftJoin: {
+              role: 'items.role',
+            },
+          },
+          where: {
+            user: {
+              email: email,
+            },
+          },
+          relations: ['role'],
+        },
+        page,
+      },
+    );
+    const { total = 0, items = [] } = data;
+    return {
+      total,
+      items,
+    };
+  }
 }
