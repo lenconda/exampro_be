@@ -154,7 +154,12 @@ export class AdminController {
   }
 
   @Get('/role')
-  @Role('user/admin/system', 'user/admin/role')
+  @Role(
+    'user/admin/system',
+    'user/admin/role',
+    'user/admin/layout',
+    'user/admin/user',
+  )
   async getRoles(@Query('flatten') flatten = false) {
     if (flatten) {
       return await this.roleService.getFlattenedRoles();

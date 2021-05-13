@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { Role } from './role.entity';
 import _ from 'lodash';
 import { ERR_ROLE_ID_DUPLICATED, ERR_ROLE_NOT_FOUND } from 'src/constants';
@@ -94,6 +94,17 @@ export class RoleService {
   }
 
   async grantUserRoles(userEmails: string[], roleIds: string[]) {
+    const existedUserRoles = await this.userRoleRepository.find({
+      where: {
+        user: {
+          email: In(userEmails),
+        },
+        role: {
+          id: In(roleIds),
+        },
+      },
+      relations: ['menu', 'role'],
+    });
     const users = await this.userRepository.find({
       where: userEmails.map((email) => ({ email })),
     });
@@ -103,7 +114,15 @@ export class RoleService {
     const userRoles: UserRole[] = [];
     for (const user of users) {
       for (const role of roles) {
-        userRoles.push(this.userRoleRepository.create({ user, role }));
+        if (
+          !existedUserRoles.find(
+            (userRole) =>
+              user.email === userRole.user.email &&
+              role.id === userRole.role.id,
+          )
+        ) {
+          userRoles.push(this.userRoleRepository.create({ user, role }));
+        }
       }
     }
     await this.userRoleRepository.save(userRoles);
@@ -170,6 +189,17 @@ export class RoleService {
   }
 
   async grantMenuRoles(menuIds: number[], roleIds: string[]) {
+    const existedMenuRoles = await this.menuRoleRepository.find({
+      where: {
+        menu: {
+          id: In(menuIds),
+        },
+        role: {
+          id: In(roleIds),
+        },
+      },
+      relations: ['menu', 'role'],
+    });
     const menus = await this.menuRepository.find({
       where: menuIds.map((id) => ({ id })),
     });
@@ -179,7 +209,14 @@ export class RoleService {
     const menuRoles: MenuRole[] = [];
     for (const menu of menus) {
       for (const role of roles) {
-        menuRoles.push(this.menuRoleRepository.create({ menu, role }));
+        if (
+          !existedMenuRoles.find(
+            (menuRole) =>
+              menu.id === menuRole.menu.id && role.id === menuRole.role.id,
+          )
+        ) {
+          menuRoles.push(this.menuRoleRepository.create({ menu, role }));
+        }
       }
     }
     await this.menuRoleRepository.save(menuRoles);
