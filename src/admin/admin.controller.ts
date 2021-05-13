@@ -34,7 +34,7 @@ export class AdminController {
     private readonly examService: ExamService,
   ) {}
 
-  @Post()
+  @Post('/user')
   @Role('user/admin/system', 'user/admin/user')
   async createAdmin(
     @Body('email') email: string,
