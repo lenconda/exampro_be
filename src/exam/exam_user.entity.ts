@@ -20,6 +20,9 @@ export class ExamUser {
   @Column({ default: true, nullable: false })
   confirmed: boolean;
 
+  @Column({ default: false, nullable: false })
+  fraud: boolean;
+
   @Column({ name: 'left_times', default: 0 })
   leftTimes: number;
 
