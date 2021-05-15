@@ -131,7 +131,7 @@ export class ExamService {
             }
           : {}),
       },
-      relations: ['exam', 'role', 'exam.paper'],
+      relations: ['exam', 'role', 'exam.paper', 'user'],
     });
     if (!result) {
       throw new ForbiddenException();

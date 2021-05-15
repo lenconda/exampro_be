@@ -18,13 +18,9 @@ export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   private logger: Logger = new Logger('MessageGateway');
 
-  @SubscribeMessage('joinRoom')
-  public joinRoom(client: Socket, room: string): void {
-    /*
-    client.join(room);
-    client.emit('joinedRoom', room);
-    */
-
+  @SubscribeMessage('join-room')
+  public joinRoom(client: Socket, data: Record<string, any>): void {
+    const { room, email } = data;
     const existingSocket = this.activeSockets?.find(
       (socket) => socket.room === room && socket.id === client.id,
     );
@@ -42,7 +38,7 @@ export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
       });
     }
 
-    return this.logger.log(`Client ${client.id} joined ${room}`);
+    return this.logger.log(`Client ${email} joined ${room}`);
   }
 
   @SubscribeMessage('call-user')
