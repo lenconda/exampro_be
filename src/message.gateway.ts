@@ -22,19 +22,19 @@ export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
   public joinRoom(client: Socket, data: Record<string, any>): void {
     const { room, email } = data;
     const existingSocket = this.activeSockets?.find(
-      (socket) => socket.room === room && socket.id === client.id,
+      (socket) => socket.room === room && socket.id === email,
     );
 
     if (!existingSocket) {
-      this.activeSockets = [...this.activeSockets, { id: client.id, room }];
+      this.activeSockets = [...this.activeSockets, { id: email, room }];
       client.emit(`${room}-update-user-list`, {
         users: this.activeSockets
-          .filter((socket) => socket.room === room && socket.id !== client.id)
+          .filter((socket) => socket.room === room && socket.id !== email)
           .map((existingSocket) => existingSocket.id),
       });
 
       client.broadcast.emit(`${room}-update-user-list`, {
-        users: [client.id],
+        users: [email],
       });
     }
 
@@ -43,26 +43,28 @@ export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   @SubscribeMessage('call-user')
   public callUser(client: Socket, data: any): void {
-    client.to(data.to).emit('call-made', {
-      offer: data.offer,
-      socket: client.id,
+    const { to, offer, email } = data;
+    client.to(to).emit('call-made', {
+      offer,
+      socket: email,
     });
   }
 
   @SubscribeMessage('make-answer')
   public makeAnswer(client: Socket, data: any): void {
-    client.to(data.to).emit('answer-made', {
-      socket: client.id,
-      answer: data.answer,
+    const { to, answer, email } = data;
+    client.to(to).emit('answer-made', {
+      socket: email,
+      answer,
     });
   }
 
-  @SubscribeMessage('reject-call')
-  public rejectCall(client: Socket, data: any): void {
-    client.to(data.from).emit('call-rejected', {
-      socket: client.id,
-    });
-  }
+  // @SubscribeMessage('reject-call')
+  // public rejectCall(client: Socket, data: any): void {
+  //   client.to(data.from).emit('call-rejected', {
+  //     socket: client.id,
+  //   });
+  // }
 
   public afterInit(): void {
     this.logger.log('Init');
