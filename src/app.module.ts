@@ -27,6 +27,7 @@ import { ExamModule } from './exam/exam.module';
 import { ReportModule } from './report/report.module';
 import { ReportType } from './report/report_type.entity';
 import { ResourceModule } from './resource/resource.module';
+import { MessageGateway } from './message.gateway';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { ResourceModule } from './resource/resource.module';
       provide: APP_INTERCEPTOR,
       useClass: AppInterceptor,
     },
+    MessageGateway,
   ],
 })
 export class AppModule {}
