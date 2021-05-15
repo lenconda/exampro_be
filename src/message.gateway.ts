@@ -10,7 +10,7 @@ import { Socket } from 'socket.io';
 import { Server } from 'ws';
 import { Logger } from '@nestjs/common';
 
-@WebSocketGateway({ namespace: 'chat' })
+@WebSocketGateway({ namespace: 'video' })
 export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
