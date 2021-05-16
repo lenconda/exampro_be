@@ -9,40 +9,49 @@ import { Socket } from 'socket.io';
 
 import { Server } from 'ws';
 import { Logger } from '@nestjs/common';
+import { User } from './user/user.entity';
+
+interface JoinRoomData {
+  room: string;
+  user: Partial<User>;
+}
+
+interface ActiveSocket extends JoinRoomData {
+  id: string;
+}
 
 @WebSocketGateway({ namespace: 'video' })
 export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
-  private activeSockets: { room: string; id: string; email: string }[] = [];
+  private activeSockets: ActiveSocket[] = [];
 
   private logger: Logger = new Logger('MessageGateway');
 
   @SubscribeMessage('join-room')
-  public joinRoom(client: Socket, data): void {
-    const { room, email } = data;
+  public joinRoom(client: Socket, data: JoinRoomData): void {
+    const { room, user } = data;
 
     const existingSocket = this.activeSockets?.find(
       (socket) => socket.room === room && socket.id === client.id,
     );
 
     if (!existingSocket) {
-      this.activeSockets = [
-        ...this.activeSockets,
-        { id: client.id, room, email },
-      ];
+      const currentSocket = { id: client.id, room, user };
+      this.activeSockets = [...this.activeSockets, currentSocket];
+
       client.emit(`${room}-update-user-list`, {
-        users: this.activeSockets
-          .filter((socket) => socket.room === room && socket.id !== client.id)
-          .map((existingSocket) => existingSocket.id),
+        users: this.activeSockets.filter(
+          (socket) => socket.room === room && socket.id !== client.id,
+        ),
       });
 
       client.broadcast.emit(`${room}-update-user-list`, {
-        users: [client.id],
+        users: [currentSocket],
       });
     }
 
-    return this.logger.log(`Client ${client.id} joined ${room}`);
+    return this.logger.log(`Client ${user.email} joined ${room}`);
   }
 
   @SubscribeMessage('call-user')
@@ -69,7 +78,7 @@ export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
     });
   }
 
-  public afterInit(server: Server): void {
+  public afterInit(): void {
     this.logger.log('Init');
   }
 
