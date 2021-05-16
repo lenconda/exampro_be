@@ -56,7 +56,6 @@ export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   @SubscribeMessage('call-user')
   public callUser(client: Socket, data: any): void {
-    this.logger.log('sub:call-user', JSON.stringify(data));
     client.to(data.to).emit('call-made', {
       offer: data.offer,
       socket: client.id,
