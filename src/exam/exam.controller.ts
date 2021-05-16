@@ -215,7 +215,11 @@ export class ExamController {
   }
 
   @Get('/:exam/:type')
-  @Role('resource/exam/initiator', 'resource/exam/maintainer')
+  @Role(
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/invigilator',
+  )
   async queryExamUsers(
     @Param('exam') examId: number,
     @Param('type') type: string,
