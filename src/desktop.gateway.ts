@@ -20,13 +20,13 @@ interface ActiveSocket extends JoinRoomData {
   id: string;
 }
 
-@WebSocketGateway({ namespace: 'video' })
-export class MessageGateway implements OnGatewayInit, OnGatewayDisconnect {
+@WebSocketGateway({ namespace: 'desktop' })
+export class DesktopPeerGateway implements OnGatewayInit, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   private activeSockets: ActiveSocket[] = [];
 
-  private logger: Logger = new Logger('MessageGateway');
+  private logger: Logger = new Logger('DesktopPeerGateway');
 
   @SubscribeMessage('join-room')
   public joinRoom(client: Socket, data: JoinRoomData): void {
