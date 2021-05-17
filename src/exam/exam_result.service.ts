@@ -52,14 +52,6 @@ export class ExamResultService {
         },
       },
     });
-    if (examUser) {
-      await this.examUserRepository.update(
-        { id: examUser.id },
-        {
-          submitTime: new Date(),
-        },
-      );
-    }
     if (existedExamResults.length > 0) {
       await this.examResultRepository.delete(
         existedExamResults.map((relation) => relation.id),
@@ -91,7 +83,7 @@ export class ExamResultService {
     );
     const currentTimestamp = Date.now();
     const endTimestamp = exam.endTime.getTime();
-    if (currentTimestamp > endTimestamp) {
+    if (currentTimestamp > endTimestamp + 10000) {
       throw new ForbiddenException();
     }
     const { startTime, delay } = exam;
@@ -119,6 +111,14 @@ export class ExamResultService {
         return currentExamResults;
       }),
     );
+    if (examUser) {
+      await this.examUserRepository.update(
+        { id: examUser.id },
+        {
+          submitTime: new Date(),
+        },
+      );
+    }
     await this.examResultRepository.save(examResults);
   }
 

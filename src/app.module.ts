@@ -27,6 +27,8 @@ import { ExamModule } from './exam/exam.module';
 import { ReportModule } from './report/report.module';
 import { ReportType } from './report/report_type.entity';
 import { ResourceModule } from './resource/resource.module';
+import { CameraPeerGateway } from './camera.gateway';
+import { DesktopPeerGateway } from './desktop.gateway';
 
 @Module({
   imports: [
@@ -94,6 +96,8 @@ import { ResourceModule } from './resource/resource.module';
       provide: APP_INTERCEPTOR,
       useClass: AppInterceptor,
     },
+    CameraPeerGateway,
+    DesktopPeerGateway,
   ],
 })
 export class AppModule {}

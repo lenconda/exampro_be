@@ -215,7 +215,11 @@ export class ExamController {
   }
 
   @Get('/:exam/:type')
-  @Role('resource/exam/initiator', 'resource/exam/maintainer')
+  @Role(
+    'resource/exam/initiator',
+    'resource/exam/maintainer',
+    'resource/exam/invigilator',
+  )
   async queryExamUsers(
     @Param('exam') examId: number,
     @Param('type') type: string,
@@ -318,6 +322,7 @@ export class ExamController {
   }
 
   @Post('/:exam/start')
+  @Role('resource/exam/participant')
   async startExam(
     @CurrentUser() participant: User,
     @Param('exam') examId: number,
@@ -326,6 +331,7 @@ export class ExamController {
   }
 
   @Post('/:exam/review/:participant')
+  @Role('resource/exam/reviewer')
   async startReviewExam(
     @CurrentUser() reviewer: User,
     @Param('exam') examId: number,
@@ -335,6 +341,36 @@ export class ExamController {
       reviewer,
       examId,
       participantEmail,
+    );
+  }
+
+  @Post('/:exam/fraud/:participant')
+  @Role('resource/exam/invigilator')
+  async markFraud(
+    @CurrentUser() invigilator: User,
+    @Param('exam') examId: number,
+    @Param('participant') participantEmail: string,
+  ) {
+    this.examService.changeFraudStatus(
+      invigilator,
+      examId,
+      participantEmail,
+      true,
+    );
+  }
+
+  @Delete('/:exam/fraud/:participant')
+  @Role('resource/exam/invigilator')
+  async cancelFraud(
+    @CurrentUser() invigilator: User,
+    @Param('exam') examId: number,
+    @Param('participant') participantEmail: string,
+  ) {
+    this.examService.changeFraudStatus(
+      invigilator,
+      examId,
+      participantEmail,
+      false,
     );
   }
 }
