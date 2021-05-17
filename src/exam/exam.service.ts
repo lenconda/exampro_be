@@ -670,4 +670,53 @@ export class ExamService {
       },
     );
   }
+
+  async changeFraudStatus(
+    invigilator: User,
+    examId: number,
+    participantEmail: string,
+    status: boolean,
+  ) {
+    const invigilatorExamRelation = await this.examUserRepository.findOne({
+      where: {
+        user: {
+          email: invigilator.email,
+        },
+        role: {
+          id: 'resource/exam/invigilator',
+        },
+        exam: {
+          id: examId,
+        },
+      },
+    });
+    if (!invigilatorExamRelation) {
+      throw new ForbiddenException();
+    }
+    const participantExamRelation = await this.examUserRepository.findOne({
+      where: {
+        exam: {
+          id: examId,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+        user: {
+          email: participantEmail,
+        },
+      },
+    });
+    if (participantExamRelation) {
+      await this.examUserRepository.update(
+        {
+          id: participantExamRelation.id,
+        },
+        {
+          fraud: status,
+        },
+      );
+    } else {
+      return {};
+    }
+  }
 }
