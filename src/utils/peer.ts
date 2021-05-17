@@ -12,6 +12,7 @@ import { User } from '../user/user.entity';
 interface JoinRoomData {
   room: string;
   user: Partial<User>;
+  mode: 'participant' | 'invigilator';
 }
 
 interface ActiveSocket extends JoinRoomData {
@@ -29,14 +30,14 @@ export class BasePeerGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   @SubscribeMessage('join-room')
   public joinRoom(client: Socket, data: JoinRoomData): void {
-    const { room, user } = data;
+    const { room, user, mode } = data;
 
     const existingSocket = this.activeSockets?.find(
       (socket) => socket.room === room && socket.id === client.id,
     );
 
     if (!existingSocket) {
-      const currentSocket = { id: client.id, room, user };
+      const currentSocket = { id: client.id, room, user, mode };
       this.activeSockets = [...this.activeSockets, currentSocket];
 
       client.emit(`${room}-update-user-list`, {
