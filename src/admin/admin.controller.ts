@@ -12,6 +12,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import _ from 'lodash';
+import { Dynamic } from 'src/dynamic/dynamic.entity';
+import { DynamicService } from 'src/dynamic/dynamic.service';
 import { ExamService } from 'src/exam/exam.service';
 import { MenuService } from 'src/menu/menu.service';
 import { PaperService } from 'src/paper/paper.service';
@@ -32,6 +34,7 @@ export class AdminController {
     private readonly reportService: ReportService,
     private readonly paperService: PaperService,
     private readonly examService: ExamService,
+    private readonly dynamicService: DynamicService,
   ) {}
 
   @Post('/user')
@@ -389,5 +392,50 @@ export class AdminController {
       ],
       parseInt(page),
     );
+  }
+
+  @Post('/dynamic')
+  @Role('user/admin/system', 'user/admin/layout', 'user/admin/role')
+  async createDynamicConfig(
+    @Body('pathname') pathname: string,
+    @Body('content') content: string,
+  ) {
+    return await this.dynamicService.createDynamicConfig(pathname, content);
+  }
+
+  @Patch('/dynamic/:id')
+  @Role('user/admin/system', 'user/admin/layout', 'user/admin/role')
+  async updateDynamicConfig(
+    @Param('id') dynamicConfigId: number,
+    @Body() updates: Partial<Dynamic>,
+  ) {
+    return await this.dynamicService.updateDynamicConfig(
+      dynamicConfigId,
+      updates,
+    );
+  }
+
+  @Get('/dynamic')
+  @Role('user/admin/system', 'user/admin/layout', 'user/admin/role')
+  async queryDynamicConfigs(
+    @Query('last_cursor') lastCursor: number = null,
+    @Query('page') page = '0',
+    @Query('search') search = '',
+    @Query('size') size = 10,
+    @Query('order') order = 'asc',
+  ) {
+    return await this.dynamicService.queryDynamicConfigs(
+      lastCursor,
+      size,
+      order,
+      search,
+      parseInt(page),
+    );
+  }
+
+  @Delete('/dynamic')
+  @Role('user/admin/system', 'user/admin/layout', 'user/admin/role')
+  async deleteDynamicConfigs(@Body('configs') configs: number[]) {
+    return await this.dynamicService.deleteDynamicConfigs(configs);
   }
 }

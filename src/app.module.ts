@@ -29,6 +29,7 @@ import { ReportType } from './report/report_type.entity';
 import { ResourceModule } from './resource/resource.module';
 import { CameraPeerGateway } from './camera.gateway';
 import { DesktopPeerGateway } from './desktop.gateway';
+import { DynamicModule } from './dynamic/dynamic.module';
 
 @Module({
   imports: [
@@ -88,6 +89,7 @@ import { DesktopPeerGateway } from './desktop.gateway';
     ExamModule,
     ReportModule,
     ResourceModule,
+    DynamicModule,
   ],
   controllers: [AppController],
   providers: [
