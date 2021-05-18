@@ -36,6 +36,10 @@ export class AppInterceptor<T> implements NestInterceptor<T, Response> {
     const user = request?.user || {};
     const email = user?.email || '';
 
+    if (pathname.startsWith('/api/dynamic')) {
+      return next.handle();
+    }
+
     if (pathname.startsWith('/api/auth') || _.isEmpty(user) || !token) {
       return next.handle().pipe(
         map(async (data) => {

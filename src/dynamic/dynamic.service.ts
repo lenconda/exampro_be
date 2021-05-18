@@ -72,4 +72,17 @@ export class DynamicService {
       await this.dynamicRepository.delete(configs.map((config) => config.id));
     }
   }
+
+  async getDynamicConfigDetail(pathname: string) {
+    const result = await this.dynamicRepository.findOne({
+      where: {
+        pathname,
+      },
+    });
+    if (result) {
+      return result;
+    } else {
+      return {};
+    }
+  }
 }
