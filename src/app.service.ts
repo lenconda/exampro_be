@@ -67,7 +67,7 @@ export class AppService {
       .orIgnore()
       .execute();
     const roles = await this.roleRepository.find({
-      where: [{ id: 'user/admin/system' }],
+      where: [{ id: In(['user/admin/system', 'user/normal']) }],
     });
     try {
       await this.userRoleRepository.save(
