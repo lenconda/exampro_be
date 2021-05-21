@@ -214,7 +214,7 @@ export class AuthService {
   async checkEmail(email: string) {
     const user = await this.userRepository.findOne({
       where: { email },
-      select: ['password'],
+      select: ['password', 'email'],
     });
     if (user) {
       if (user.password) {
