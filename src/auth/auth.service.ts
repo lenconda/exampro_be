@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -208,10 +212,18 @@ export class AuthService {
   }
 
   async checkEmail(email: string) {
-    if (await this.userRepository.findOne({ email })) {
-      return {
-        type: 'login',
-      };
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['password'],
+    });
+    if (user) {
+      if (user.password) {
+        return {
+          type: 'login',
+        };
+      } else {
+        throw new BadRequestException(ERR_USER_PASSWORD_NOT_SET);
+      }
     } else {
       await this.register([email]);
       return {
