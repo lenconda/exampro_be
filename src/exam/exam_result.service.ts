@@ -268,7 +268,9 @@ export class ExamResultService {
     const resultMap = {};
     const items = await this.examResultRepository.find({
       where: {
-        id: examId,
+        exam: {
+          id: examId,
+        },
       },
       relations: [
         'participant',
@@ -277,35 +279,29 @@ export class ExamResultService {
         'paperQuestion.question.choices',
       ],
     });
+
     for (const item of items) {
       const { email } = item.participant;
       if (!resultMap[email]) {
-        resultMap[email] = {};
-      }
-      if (!resultMap[email][item.paperQuestion.question.id]) {
-        resultMap[email][item.paperQuestion.question.id] = {
-          score: item.score,
-          paperQuestion: item.paperQuestion,
+        resultMap[email] = {
+          user: item.participant,
+          questions: {},
         };
       }
+
+      resultMap[email].questions[item.paperQuestion.question.id] = item.score;
     }
+
     const result = Object.keys(resultMap).map((email) => {
-      const questionScoresMap = resultMap[email];
-      const questionScoreItems = Object.keys(questionScoresMap).map(
-        (questionId) => questionScoresMap[questionId],
-      );
-      const sortedScores = _.sortBy(
-        questionScoreItems,
-        (item) => item.paperQuestion.order,
-      ).map((item) => ({
-        score: item.score,
-        question: item.paperQuestion.question,
-      }));
+      const { user, questions } = resultMap[email];
       return {
-        email,
-        scores: sortedScores,
+        user,
+        score: Object.keys(questions).reduce((result, currentQuestionId) => {
+          return result + questions[currentQuestionId];
+        }, 0),
       };
     });
+
     return { items: result };
   }
 }
