@@ -286,6 +286,7 @@ export class ExamResultService {
         resultMap[email] = {
           user: item.participant,
           questions: {},
+          createdAt: item.createdAt,
         };
       }
 
@@ -293,12 +294,13 @@ export class ExamResultService {
     }
 
     const result = Object.keys(resultMap).map((email) => {
-      const { user, questions } = resultMap[email];
+      const { user, questions, createdAt } = resultMap[email];
       return {
         user,
         score: Object.keys(questions).reduce((result, currentQuestionId) => {
           return result + questions[currentQuestionId];
         }, 0),
+        createdAt,
       };
     });
 
