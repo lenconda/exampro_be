@@ -110,7 +110,28 @@ export class ExamService {
     }
   }
 
-  async getExam(user: User, examId: number, roleId?: string) {
+  async getExam(
+    user: User,
+    examId: number,
+    roleId?: string,
+    participantEmail?: string,
+  ) {
+    if (participantEmail) {
+      const reviewerExam = await this.examUserRepository.findOne({
+        exam: {
+          id: examId,
+        },
+        user: {
+          email: user.email,
+        },
+        role: {
+          id: 'resource/exam/reviewer',
+        },
+      });
+      if (!reviewerExam) {
+        throw new ForbiddenException();
+      }
+    }
     const exam = await this.examRepository.findOne({ id: examId });
     if (exam.public) {
       return { exam };
@@ -118,7 +139,7 @@ export class ExamService {
     const result = await this.examUserRepository.findOne({
       where: {
         user: {
-          email: user.email,
+          email: participantEmail ? participantEmail : user.email,
         },
         exam: {
           id: examId,

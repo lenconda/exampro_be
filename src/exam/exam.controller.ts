@@ -267,8 +267,14 @@ export class ExamController {
     @CurrentUser() user: User,
     @Param('exam') examId: number,
     @Query('role') roleId: string,
+    @Query('participant_email') participantEmail: string,
   ) {
-    return await this.examService.getExam(user, examId, roleId);
+    return await this.examService.getExam(
+      user,
+      examId,
+      roleId,
+      participantEmail,
+    );
   }
 
   @Post()
