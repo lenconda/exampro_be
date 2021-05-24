@@ -147,7 +147,7 @@ export class ExamService {
         ...(roleId
           ? {
               role: {
-                id: roleId,
+                id: participantEmail ? 'resource/exam/participant' : roleId,
               },
             }
           : {}),
