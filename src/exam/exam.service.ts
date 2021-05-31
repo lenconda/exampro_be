@@ -681,7 +681,11 @@ export class ExamService {
         },
       },
     });
-    if (!participantUserExam || participantUserExam.reviewing) {
+    if (
+      !participantUserExam ||
+      (participantUserExam.reviewing &&
+        participantUserExam.reviewer !== reviewer.email)
+    ) {
       throw new ForbiddenException();
     }
     await this.examUserRepository.update(
