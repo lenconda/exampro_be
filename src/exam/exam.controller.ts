@@ -219,6 +219,7 @@ export class ExamController {
     'resource/exam/initiator',
     'resource/exam/maintainer',
     'resource/exam/invigilator',
+    'resource/exam/reviewer',
   )
   async queryExamUsers(
     @Param('exam') examId: number,
