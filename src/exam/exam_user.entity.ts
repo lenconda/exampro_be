@@ -35,6 +35,9 @@ export class ExamUser {
   @Column({ default: false, nullable: false })
   reviewing: boolean;
 
+  @Column({ default: null, nullable: true })
+  reviewer: string;
+
   @ManyToOne(() => Role, (role) => role.id, {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE',

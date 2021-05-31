@@ -380,4 +380,14 @@ export class ExamController {
       false,
     );
   }
+
+  @Delete('/:exam/reviewing/:participant')
+  @Role('resource/exam/reviewer')
+  async removeReviewing(
+    @CurrentUser() reviewer: User,
+    @Param('exam') examId: number,
+    @Param('participant') participantEmail: string,
+  ) {
+    this.examResultService.removeReviewing(reviewer, examId, participantEmail);
+  }
 }

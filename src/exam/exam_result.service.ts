@@ -306,4 +306,36 @@ export class ExamResultService {
 
     return { items: result };
   }
+
+  async removeReviewing(
+    reviewer: User,
+    examId: number,
+    participantEmail: string,
+  ) {
+    const examUser = await this.examUserRepository.findOne({
+      where: {
+        exam: {
+          id: examId,
+        },
+        user: {
+          email: participantEmail,
+        },
+        role: {
+          id: 'resource/exam/participant',
+        },
+        reviewer: reviewer.email,
+        reviewing: true,
+      },
+    });
+    if (examUser) {
+      await this.examUserRepository.update(
+        {
+          id: examUser.id,
+        },
+        {
+          reviewing: false,
+        },
+      );
+    }
+  }
 }

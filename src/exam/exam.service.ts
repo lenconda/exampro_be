@@ -688,6 +688,7 @@ export class ExamService {
       { id: participantUserExam.id },
       {
         reviewing: true,
+        reviewer: reviewer.email,
       },
     );
   }
