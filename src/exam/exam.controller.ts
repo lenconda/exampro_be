@@ -229,7 +229,7 @@ export class ExamController {
     @Query('size') size = '10',
     @Query('search') search = '',
     @Query('order') order: 'asc' | 'desc' = 'desc',
-    @Query('relation') relation: 'user' | 'exam_user' = 'user',
+    @Query('relation') relation: 'user' | 'user_exam' = 'user',
     @Query('scope') scope: 'all' | 'unlocked_only' | 'locked_only',
   ) {
     const cursor = lastCursor ? parseInt(lastCursor) : null;
