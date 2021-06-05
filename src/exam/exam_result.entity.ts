@@ -17,7 +17,7 @@ export class ExamResult {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true, default: null })
+  @Column({ nullable: true, default: null, type: 'longtext' })
   content: string;
 
   @Column({ nullable: true, default: null })
